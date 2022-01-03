@@ -1,0 +1,38 @@
+{
+	"name": "gilbertsoft/typo3-core-patches-project",
+	"description": "Project to test the gilbertsoft/typo3-core-patches package.",
+	"license": "MIT",
+	"type": "project",
+	"authors": [
+		{
+			"name": "Simon Gilli",
+			"email": "simon.gilli@gilbertsoft.org",
+			"homepage": "https://gilbertsoft.org",
+			"role": "developer"
+		}
+	],
+	"homepage": "https://github.com/GsTYPO3/core-patches",
+	"require": {
+		"php": "^7.4 || ^8.0",
+		"gilbertsoft/typo3-core-patches": "^0.1@dev",
+		"typo3/minimal": "^11.5"
+	},
+	"require-dev": {
+		"composer/composer": "^2.1.14",
+		"ergebnis/composer-normalize": "*"
+	},
+	"repositories": [
+		{
+			"type": "path",
+			"url": "../.."
+		}
+	],
+	"config": {
+		"allow-plugins": {
+			"typo3/class-alias-loader": true,
+			"typo3/cms-composer-installers": true,
+			"ergebnis/composer-normalize": true,
+			"gilbertsoft/typo3-core-patches": true
+		}
+	}
+}

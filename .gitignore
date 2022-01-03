@@ -1,0 +1,15 @@
+# Folders
+/.build/*
+/.ddev/data/*
+/.mage/*
+/dump/*
+!/dump/.gitkeep
+/public/*
+/var/*
+!/var/labels
+/vendor
+
+# Files
+/.php-cs-fixer.cache
+/.phplint-cache
+/composer.lock

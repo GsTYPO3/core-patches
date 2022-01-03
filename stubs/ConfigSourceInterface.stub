@@ -1,0 +1,16 @@
+<?php
+
+namespace Composer\Config;
+
+interface ConfigSourceInterface
+{
+    /**
+     * Add a property
+     *
+     * @param string $name  Name
+     * @param mixed  $value Value
+     *
+     * @return void
+     */
+    public function addProperty($name, $value);
+}

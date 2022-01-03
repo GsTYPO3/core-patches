@@ -1,0 +1,13 @@
+<?php
+
+namespace Symfony\Component\Console\Command;
+
+class Command
+{
+    /**
+     * @phpstan-return void
+     */
+    protected function configure()
+    {
+    }
+}

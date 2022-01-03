@@ -1,0 +1,9 @@
+path: .
+jobs: 10
+extensions:
+  - php
+exclude:
+  - .build
+  - tools
+  - vendor
+warning: false

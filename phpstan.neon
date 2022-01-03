@@ -1,0 +1,11 @@
+parameters:
+	level: max
+	treatPhpDocTypesAsCertain: false
+
+	paths:
+		- src
+		- tests
+
+	stubFiles:
+		- stubs/Command.stub
+		- stubs/ConfigSourceInterface.stub
