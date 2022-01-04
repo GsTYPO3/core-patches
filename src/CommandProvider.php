@@ -23,8 +23,8 @@ final class CommandProvider implements CommandProviderCapability
     public function getCommands()
     {
         return [
-            new Command\Typo3\CorePatch\AddCommand(),
-            new Command\Typo3\CorePatch\RemoveCommand(),
+            new Command\Typo3\Patch\ApplyCommand(),
+            new Command\Typo3\Patch\RemoveCommand(),
         ];
     }
 }

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace GsTYPO3\CorePatches\Command\Typo3\CorePatch;
+namespace GsTYPO3\CorePatches\Command\Typo3\Patch;
 
 use Composer\Command\BaseCommand;
 use Composer\Composer;
@@ -35,7 +35,7 @@ final class RemoveCommand extends BaseCommand
     protected function configure()
     {
         $this
-            ->setName('typo3:core-patch:remove')
+            ->setName('typo3:patch:remove')
             ->setDescription('Remove a TYPO3 core patch.')
             ->setDefinition([
                 new InputArgument(

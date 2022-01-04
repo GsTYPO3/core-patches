@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace GsTYPO3\CorePatches\Command\Typo3\CorePatch;
+namespace GsTYPO3\CorePatches\Command\Typo3\Patch;
 
 use Composer\Command\BaseCommand;
 use Composer\Composer;
@@ -30,7 +30,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use UnexpectedValueException;
 
-final class AddCommand extends BaseCommand
+final class ApplyCommand extends BaseCommand
 {
     /**
      * {@inheritDoc}
@@ -38,8 +38,8 @@ final class AddCommand extends BaseCommand
     protected function configure()
     {
         $this
-            ->setName('typo3:core-patch:add')
-            ->setDescription('Add a TYPO3 core patch.')
+            ->setName('typo3:patch:apply')
+            ->setDescription('Add and apply a TYPO3 core patch.')
             ->setDefinition([
                 new InputArgument(
                     'change-id',

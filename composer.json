@@ -128,12 +128,12 @@
 			"cp tests/project/composer.json .build/project/composer.json",
 			"@composer install -d.build/project",
 			".build/project/vendor/bin/composer update -d.build/project",
-			".build/project/vendor/bin/composer typo3:core-patch:add 72837 -d.build/project -t",
+			".build/project/vendor/bin/composer typo3:patch:apply 72837 -d.build/project -t",
 			".build/project/vendor/bin/composer validate -d.build/project"
 		],
 		"test:composer:project:remove": [
 			"test -f .build/project/composer.lock",
-			".build/project/vendor/bin/composer typo3:core-patch:remove 72837 -d.build/project",
+			".build/project/vendor/bin/composer typo3:patch:remove 72837 -d.build/project",
 			".build/project/vendor/bin/composer validate -d.build/project"
 		],
 		"test:php:lint": [
