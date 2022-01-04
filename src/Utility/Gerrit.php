@@ -67,6 +67,7 @@ final class Gerrit
      * @return string               The normalized subject
      * @throws UnexpectedValueException
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-id
+     * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-info
      */
     public function getSubject(string $changeId): string
     {
@@ -81,6 +82,24 @@ final class Gerrit
         }
 
         return $normalizedSubject;
+    }
+
+    /**
+     * @param string    $changeId   The change ID
+     * @return int                  The legacy numeric ID
+     * @throws UnexpectedValueException
+     * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-id
+     * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-info
+     */
+    public function getNumericId(string $changeId): int
+    {
+        $changeInfo = $this->getChange($changeId);
+
+        if (!is_int($numericId = ($changeInfo['_number'] ?? null))) {
+            throw new UnexpectedValueException('Number was not found.', 1640944475);
+        }
+
+        return $numericId;
     }
 
     /**

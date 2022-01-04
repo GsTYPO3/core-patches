@@ -19,7 +19,9 @@ use Composer\Config\JsonConfigSource;
 use Composer\Console\Application;
 use Composer\DependencyResolver\Operation\UninstallOperation;
 use Composer\Factory;
+use Composer\IO\IOInterface;
 use Composer\Json\JsonFile;
+use GsTYPO3\CorePatches\Utility\Gerrit;
 use RuntimeException;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputArgument;
@@ -62,6 +64,7 @@ final class RemoveCommand extends BaseCommand
             throw new UnexpectedValueException('Invalid Composer instance.', 1640857365);
         }
 
+        $config = $composer->getConfig();
         $io = $this->getIO();
 
         $configFile = new JsonFile(Factory::getComposerFile(), null, $io);
@@ -88,6 +91,8 @@ final class RemoveCommand extends BaseCommand
             }
         }
 
+        $gerrit = new Gerrit(Factory::createHttpDownloader($io, $config));
+
         $application = new Application();
         $application->setAutoExit(false);
 
@@ -99,9 +104,22 @@ final class RemoveCommand extends BaseCommand
         if ($extraPatches !== []) {
             $io->write('<info>Removing patches from composer.json</info>');
             foreach ($changeIds as $changeId) {
+                try {
+                    $numericId = $gerrit->getNumericId($changeId);
+                    $io->write(sprintf('  - Numeric ID is <comment>%s</comment>', $numericId));
+                } catch (RuntimeException | UnexpectedValueException $th) {
+                    $io->writeError('<warning>Error getting numeric ID</warning>');
+                    $io->writeError(sprintf(
+                        '<warning>%s</warning>',
+                        $th->getMessage()
+                    ), true, IOInterface::VERBOSE);
+
+                    continue;
+                }
+
                 foreach ($extraPatches as $package => &$patches) {
                     foreach ($patches as $subject => $patch) {
-                        if (strpos($patch, $changeId . '-') !== false) {
+                        if (strpos($patch, $numericId . '-') !== false) {
                             $io->write(sprintf('  - Subject is <comment>%s</comment>', $subject));
                             $io->write(sprintf('  - Removing patch <info>%s</info>', $patch));
                             unlink($patch);

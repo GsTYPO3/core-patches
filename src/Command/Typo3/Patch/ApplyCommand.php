@@ -131,8 +131,21 @@ final class ApplyCommand extends BaseCommand
                 continue;
             }
 
+            try {
+                $numericId = $gerrit->getNumericId($changeId);
+                $io->write(sprintf('  - Numeric ID is <comment>%s</comment>', $numericId));
+            } catch (RuntimeException | UnexpectedValueException $th) {
+                $io->writeError('<warning>Error getting numeric ID</warning>');
+                $io->writeError(sprintf(
+                    '<warning>%s</warning>',
+                    $th->getMessage()
+                ), true, IOInterface::VERBOSE);
+
+                continue;
+            }
+
             $currentComposerChanges = $patchCreator->create(
-                $changeId,
+                $numericId,
                 $subject,
                 $gerrit->getPatch($changeId),
                 $destination,

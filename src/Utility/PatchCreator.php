@@ -32,7 +32,7 @@ final class PatchCreator
     }
 
     /**
-     * @param string    $changeId       The change ID.
+     * @param int       $numericId      The numeric ID.
      * @param string    $subject        The subject of the patch.
      * @param string    $patch          The raw patch.
      * @param string    $destination    The destination relative to the composer root folder. Defaults to 'patches'.
@@ -41,7 +41,7 @@ final class PatchCreator
      * @throws UnexpectedValueException
      */
     public function create(
-        string $changeId,
+        int $numericId,
         string $subject,
         string $patch,
         string $destination = 'patches',
@@ -49,7 +49,7 @@ final class PatchCreator
     ): array {
         return $this->save(
             $destination,
-            $changeId,
+            $numericId,
             $subject,
             $this->split($patch, $includeTests)
         );
@@ -129,13 +129,13 @@ final class PatchCreator
 
     /**
      * @param string                            $destination    The destination relative to the composer root folder.
-     * @param string                            $changeId       The change ID.
+     * @param int                               $numericId      The numeric ID.
      * @param string                            $subject        The subject.
      * @param array<string, array<int, string>> $patches
      * @return array<string, array<string, string>>    The patch split to core packages.
      * @throws UnexpectedValueException
      */
-    public function save(string $destination, string $changeId, string $subject, array $patches): array
+    public function save(string $destination, int $numericId, string $subject, array $patches): array
     {
         if (!file_exists($destination)) {
             mkdir($destination, 0777, true);
@@ -145,7 +145,7 @@ final class PatchCreator
 
         foreach ($patches as $packageName => $chunks) {
             $content = implode('', $chunks);
-            $patchFileName = $destination . '/' . $changeId . '-' . str_replace('/', '-', $packageName) . '.patch';
+            $patchFileName = $destination . '/' . $numericId . '-' . str_replace('/', '-', $packageName) . '.patch';
             $this->io->write(sprintf('  - Creating patch <info>%s</info>', $patchFileName));
             file_put_contents($patchFileName, $content);
             $composerChanges[$packageName] = [$subject => $patchFileName];
