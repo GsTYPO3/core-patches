@@ -43,6 +43,11 @@ final class Gerrit
      */
     public function getChange(string $changeId): array
     {
+        // Support for full review URLs
+        if (preg_match('#^' . self::BASE_URL . 'c/Packages/TYPO3.CMS/\+/(\d+)#', $changeId, $matches) === 1) {
+            $changeId = $matches[1];
+        }
+
         $url = sprintf(self::BASE_URL . 'changes/%s', $changeId);
         $response = $this->downloader->get($url);
         //$body = file_get_contents($url);
