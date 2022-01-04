@@ -12,6 +12,9 @@ EOM;
 $config = \TYPO3\CodingStandards\CsFixerConfig::create();
 $config
     ->setHeader($header, true)
+    ->addRules([
+        'phpdoc_no_empty_return' => false,
+    ])
     ->getFinder()
     ->exclude('tests/project/public')
     ->exclude('tests/project/vendor')

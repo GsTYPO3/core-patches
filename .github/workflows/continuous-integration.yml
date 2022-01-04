@@ -1,0 +1,403 @@
+name: Continuous Integration (CI)
+
+on:
+  push:
+    paths-ignore:
+      - '.ddev/**'
+  pull_request:
+    paths-ignore:
+      - '.ddev/**'
+
+env:
+  COMPOSER_FLAGS: --ansi --no-interaction --no-progress --prefer-dist
+  COMPOSER_UPDATE_FLAGS: ''
+
+jobs:
+  validation:
+    name: Composer validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          coverage: none
+          extensions: intl, zip
+          ini-values: memory_limit=-1, error_reporting=E_ALL, display_errors=On
+          php-version: latest
+          tools: composer
+
+      - name: Composer Cache Vars
+        id: composer-cache-vars
+        run: |
+          echo "::set-output name=dir::$(composer config cache-files-dir)"
+          echo "::set-output name=timestamp::$(date +"%s")"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache-vars.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ steps.composer-cache-vars.outputs.timestamp }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install ${{ env.COMPOSER_FLAGS }}
+
+      - name: Validate composer.json
+        run: vendor/bin/composer ci:composer:validate
+
+      - name: Normalize composer.json
+        run: vendor/bin/composer ci:composer:normalize
+
+      - name: Check dependencies
+        run: vendor/bin/composer ci:composer:require-checker
+
+  php_lint:
+    name: PHP Lint
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - '7.2'
+          - 'latest'
+        experimental:
+          - false
+        include:
+          - php-version: 'nightly'
+            experimental: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          coverage: none
+          extensions: intl, zip
+          ini-values: memory_limit=-1, error_reporting=E_ALL, display_errors=On
+          php-version: ${{ matrix.php-version }}
+
+      - name: Composer Cache Vars
+        id: composer-cache-vars
+        run: |
+          echo "::set-output name=dir::$(composer config cache-files-dir)"
+          echo "::set-output name=timestamp::$(date +"%s")"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache-vars.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ matrix.php-version }}-${{ steps.composer-cache-vars.outputs.timestamp }}
+          restore-keys: |
+            ${{ runner.os }}-composer-${{ matrix.php-version }}-
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install ${{ env.COMPOSER_FLAGS }}
+
+      - name: Lint PHP files
+        run: composer ci:php:lint
+
+  php_coding_standards:
+    name: PHP Coding Standards
+    needs:
+      - php_lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          coverage: none
+          extensions: intl, zip
+          ini-values: memory_limit=-1, error_reporting=E_ALL, display_errors=On
+          php-version: latest
+
+      - name: Composer Cache Vars
+        id: composer-cache-vars
+        run: |
+          echo "::set-output name=dir::$(composer config cache-files-dir)"
+          echo "::set-output name=timestamp::$(date +"%s")"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache-vars.outputs.dir }}
+          key: ${{ runner.os }}-composer-latest-${{ steps.composer-cache-vars.outputs.timestamp }}
+          restore-keys: |
+            ${{ runner.os }}-composer-latest-
+
+      - name: Install dependencies
+        run: composer install ${{ env.COMPOSER_FLAGS }}
+
+      - name: Validation of coding standards for PHP files
+        run: composer ci:php:cs-fixer
+
+  php_sniff:
+    name: PHP Code Sniffer
+    needs:
+      - php_lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          coverage: none
+          extensions: intl, zip
+          ini-values: memory_limit=-1, error_reporting=E_ALL, display_errors=On
+          php-version: latest
+
+      - name: Composer Cache Vars
+        id: composer-cache-vars
+        run: |
+          echo "::set-output name=dir::$(composer config cache-files-dir)"
+          echo "::set-output name=timestamp::$(date +"%s")"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache-vars.outputs.dir }}
+          key: ${{ runner.os }}-composer-latest-${{ steps.composer-cache-vars.outputs.timestamp }}
+          restore-keys: |
+            ${{ runner.os }}-composer-latest-
+
+      - name: Install dependencies
+        run: composer install ${{ env.COMPOSER_FLAGS }}
+
+      - name: Validation of coding standards
+        run: composer ci:php:sniff
+
+      - name: Strict validation of coding standards
+        continue-on-error: true
+        run: composer ci:php:sniff:strict
+
+  php_copypaste_detector:
+    name: PHP Copy/Paste Detector
+    needs:
+      - php_lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          coverage: none
+          extensions: intl, zip
+          ini-values: memory_limit=-1, error_reporting=E_ALL, display_errors=On
+          php-version: latest
+
+      - name: Composer Cache Vars
+        id: composer-cache-vars
+        run: |
+          echo "::set-output name=dir::$(composer config cache-files-dir)"
+          echo "::set-output name=timestamp::$(date +"%s")"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache-vars.outputs.dir }}
+          key: ${{ runner.os }}-composer-latest-${{ steps.composer-cache-vars.outputs.timestamp }}
+          restore-keys: |
+            ${{ runner.os }}-composer-latest-
+
+      - name: Install dependencies
+        run: composer install ${{ env.COMPOSER_FLAGS }}
+
+      - name: Detection of copy/paste code in PHP files
+        run: composer ci:php:copypaste
+
+  php_stan:
+    name: PHP Stan
+    needs:
+      - validation
+      - php_lint
+      - php_coding_standards
+      - php_sniff
+      - php_copypaste_detector
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - '7.2'
+          - 'latest'
+        dependencies:
+          - 'lowest'
+          - 'stable'
+          - 'highest'
+        experimental:
+          - false
+        include:
+          - php-version: 'nightly'
+            dependencies: 'lowest'
+            experimental: true
+          - php-version: 'nightly'
+            dependencies: 'stable'
+            experimental: true
+          - php-version: 'nightly'
+            dependencies: 'highest'
+            experimental: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          coverage: none
+          extensions: intl, zip
+          ini-values: memory_limit=-1
+          php-version: ${{ matrix.php-version }}
+
+      - name: Composer Cache Vars
+        id: composer-cache-vars
+        run: |
+          echo "::set-output name=dir::$(composer config cache-files-dir)"
+          echo "::set-output name=timestamp::$(date +"%s")"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache-vars.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ matrix.dependencies }}-${{ matrix.php-version }}-${{ steps.composer-cache-vars.outputs.timestamp }}
+          restore-keys: |
+            ${{ runner.os }}-composer-${{ matrix.dependencies }}-${{ matrix.php-version }}-
+            ${{ runner.os }}-composer-${{ matrix.dependencies }}-
+            ${{ runner.os }}-composer-
+
+      - name: Handle lowest dependencies update
+        if: contains(matrix.dependencies, 'lowest')
+        run: echo "COMPOSER_UPDATE_FLAGS=$COMPOSER_UPDATE_FLAGS --prefer-lowest" >> $GITHUB_ENV
+
+      - name: Allow alpha releases for latest-deps builds to catch problems earlier
+        if: contains(matrix.dependencies, 'highest')
+        run: composer config minimum-stability alpha
+
+      - name: Install dependencies
+        run: composer update ${{ env.COMPOSER_UPDATE_FLAGS }} ${{ env.COMPOSER_FLAGS }}
+
+      - name: Run PHPStan
+        run: composer ci:php:stan
+
+  tests:
+    name: Tests
+    needs:
+      - php_lint
+      - php_coding_standards
+      - php_sniff
+      - php_copypaste_detector
+      - php_stan
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        php-version:
+          - '7.2'
+          - '7.4'
+          - 'latest'
+        composer-version:
+          - '2'
+        dependencies:
+          - 'lowest'
+          - 'stable'
+          - 'highest'
+        experimental:
+          - false
+        include:
+          - os: ubuntu-latest
+            php-version: 'nightly'
+            composer-version: '2'
+            dependencies: 'lowest'
+            experimental: true
+          - os: ubuntu-latest
+            php-version: 'nightly'
+            composer-version: '2'
+            dependencies: 'stable'
+            experimental: true
+          - os: ubuntu-latest
+            php-version: 'nightly'
+            composer-version: '2'
+            dependencies: 'highest'
+            experimental: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          coverage: xdebug
+          extensions: intl, zip
+          ini-values: memory_limit=-1, error_reporting=E_ALL, display_errors=On
+          php-version: ${{ matrix.php-version }}
+          tools: composer:${{ matrix.composer-version }}
+
+      - name: Composer Cache Vars
+        id: composer-cache-vars
+        run: |
+          echo "::set-output name=dir::$(composer config cache-files-dir)"
+          echo "::set-output name=timestamp::$(date +"%s")"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache-vars.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ matrix.composer-version }}-${{ matrix.dependencies }}-${{ matrix.php-version }}-${{ steps.composer-cache-vars.outputs.timestamp }}
+          restore-keys: |
+            ${{ runner.os }}-composer-${{ matrix.composer-version }}-${{ matrix.dependencies }}-${{ matrix.php-version }}-
+            ${{ runner.os }}-composer-${{ matrix.composer-version }}-${{ matrix.dependencies }}-
+            ${{ runner.os }}-composer-${{ matrix.composer-version }}-
+            ${{ runner.os }}-composer-
+
+      - name: Handle lowest dependencies update
+        if: contains(matrix.dependencies, 'lowest')
+        run: echo "COMPOSER_UPDATE_FLAGS=$COMPOSER_UPDATE_FLAGS --prefer-lowest" >> $GITHUB_ENV
+
+      - name: Allow alpha releases for latest-deps builds to catch problems earlier
+        if: contains(matrix.dependencies, 'highest')
+        run: composer config minimum-stability alpha
+
+      - name: Install dependencies
+        run: composer update ${{ env.COMPOSER_UPDATE_FLAGS }} ${{ env.COMPOSER_FLAGS }}
+
+      - name: Unit Tests
+        run: vendor/bin/composer ci:tests:unit
+
+      - name: Functional Tests
+        run: vendor/bin/composer ci:tests:functional
+
+      - name: Smoke Tests
+        run: vendor/bin/composer ci:tests:smoke
+
+      - name: Archive Logs
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: logs
+          path: var/log

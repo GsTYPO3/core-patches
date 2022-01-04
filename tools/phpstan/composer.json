@@ -6,5 +6,10 @@
         "phpstan/phpstan-strict-rules": "*",
         "phpstan/phpstan-symfony": "*",
         "rector/rector": "*"
+    },
+    "config": {
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
     }
 }
