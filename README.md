@@ -62,12 +62,25 @@ composer typo3:patch:remove 12345
 composer typo3:patch:remove 12345 23456 34567
 ```
 
+## Supported change ID formats
+
+This plugin supports various change-id formats, as described in
+<https://review.typo3.org/Documentation/rest-api-changes.html#change-id>.
+
+Additionally, you can also specify the full URL for the change, as shown in the
+next example:
+
+```bash
+composer typo3:patch:apply https://review.typo3.org/c/Packages/TYPO3.CMS/+/12345
+```
+
 ## Feedback / Bug reports / Contribution
 
 Bug reports, feature requests and pull requests are welcome in the GitHub
 repository: <https://github.com/GsTYPO3/core-patches>
 
-Currently there is an on going issue to provide feedback: <https://github.com/GsTYPO3/core-patches/issues/1>
+Currently there is an on going issue to provide feedback:
+<https://github.com/GsTYPO3/core-patches/issues/1>
 
 ## License
 
