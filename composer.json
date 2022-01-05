@@ -43,6 +43,14 @@
 			"GsTYPO3\\CorePatches\\Tests\\": "tests"
 		}
 	},
+	"config": {
+		"allow-plugins": {
+			"ergebnis/composer-normalize": true,
+			"bamarni/composer-bin-plugin": true,
+			"cweagans/composer-patches": true,
+			"gilbertsoft/typo3-core-patches": true
+		}
+	},
 	"extra": {
 		"bamarni-bin": {
 			"target-directory": "tools"
@@ -102,7 +110,7 @@
 		"ci:yaml:lint": "yaml-lint .ddev config",
 		"clean": [
 			"@tools:setup:clean",
-			"rm -r vendor .php-cs-fixer.cache .phplint-cache composer.lock"
+			"rm -fr vendor .php-cs-fixer.cache .phplint-cache composer.lock"
 		],
 		"fix": [
 			"@fix:composer",
@@ -178,7 +186,7 @@
 		"tools:php:sniff": "phpcs --standard=PSR12 src tests",
 		"tools:php:sniff:strict": "phpcs src tests",
 		"tools:php:stan": "phpstan analyse",
-		"tools:setup:clean": "rm -r tools/**/composer.lock tools/**/vendor",
+		"tools:setup:clean": "rm -fr tools/**/composer.lock tools/**/vendor",
 		"tools:setup:install": "@composer bin all install --ansi",
 		"tools:setup:update": "@composer bin all update --ansi",
 		"tools:static": [
