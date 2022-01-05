@@ -15,6 +15,15 @@ composer require gilbertsoft/typo3-core-patches
 If the package is installed as dev requirement, the patches won't get applied
 using the install option `--no-dev`.
 
+For Composer 2.2 and later, plug-ins must be explicitly allowed using the
+following command:
+
+```bash
+composer config allow-plugins.gilbertsoft/typo3-core-patches true
+```
+
+`cweagans/composer-patches` is automatically added by this plugin.
+
 ## Adding a change
 
 Lookup the change ID at <https://forge.typo3.org> or <https://review.typo3.org>
@@ -57,6 +66,8 @@ composer typo3:patch:remove 12345 23456 34567
 
 Bug reports, feature requests and pull requests are welcome in the GitHub
 repository: <https://github.com/GsTYPO3/core-patches>
+
+Currently there is an on going issue to provide feedback: <https://github.com/GsTYPO3/core-patches/issues/1>
 
 ## License
 
