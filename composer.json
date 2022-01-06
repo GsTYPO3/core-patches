@@ -24,13 +24,14 @@
 		"source": "https://github.com/GsTYPO3/core-patches"
 	},
 	"require": {
-		"php": "^7.2 || ^8.0",
-		"composer-plugin-api": "^1.1 || ^2.0",
+		"php": "^7.2.5 || ^8.0",
+		"ext-json": "*",
+		"composer-plugin-api": "^2.0",
 		"cweagans/composer-patches": "^1.7"
 	},
 	"require-dev": {
 		"bamarni/composer-bin-plugin": "^1.4",
-		"composer/composer": "^1.2 || ^2.0",
+		"composer/composer": "^2.0",
 		"ergebnis/composer-normalize": "*"
 	},
 	"autoload": {
@@ -49,15 +50,15 @@
 			"bamarni/composer-bin-plugin": true,
 			"cweagans/composer-patches": true,
 			"gilbertsoft/typo3-core-patches": true
-		}
+		},
+		"sort-packages": true
 	},
 	"extra": {
 		"bamarni-bin": {
 			"target-directory": "tools"
 		},
 		"branch-alias": {
-			"dev-main": "0.1.x-dev",
-			"dev-master": "0.1.x-dev"
+			"dev-main": "0.1.x-dev"
 		},
 		"class": "GsTYPO3\\CorePatches\\Plugin"
 	},
@@ -73,41 +74,46 @@
 			"@ci:static"
 		],
 		"ci:composer": [
+			"@ci:composer:validate",
 			"@ci:composer:normalize",
-			"@ci:composer:validate"
+			"@ci:composer:require-checker"
 		],
 		"ci:composer:normalize": "@composer normalize --dry-run",
-		"ci:composer:require-checker": "composer-require-checker",
-		"ci:composer:validate": "@composer validate",
+		"ci:composer:require-checker": [
+			"@composer require composer/composer:* composer/semver:* symfony/console:* --ansi --no-interaction --no-progress",
+			"composer-require-checker",
+			"@composer remove composer/semver symfony/console --ansi --no-interaction --no-progress --no-update",
+			"@composer require composer/composer:^2.0 --ansi --no-interaction --no-progress --dev"
+		],
+		"ci:composer:validate": "@composer validate --strict",
 		"ci:dynamic": [
 			"@ci:tests"
 		],
 		"ci:php": [
-			"@ci:php:copypaste",
 			"@ci:php:lint",
+			"@ci:php:cs-fixer",
 			"@ci:php:sniff",
-			"@ci:php:stan",
-			"@ci:php:cs-fixer"
+			"@ci:php:copypaste",
+			"@ci:php:stan"
 		],
 		"ci:php:copypaste": "phpcpd src tests",
-		"ci:php:cs": "php-cs-fixer fix -v --dry-run --using-cache no --diff",
-		"ci:php:cs-fixer": "php-cs-fixer fix -v --dry-run --diff --diff-format=udiff",
+		"ci:php:cs-fixer": "php-cs-fixer fix -v --dry-run --using-cache no --diff",
 		"ci:php:lint": "phplint --no-progress",
-		"ci:php:sniff": "phpcs src",
+		"ci:php:sniff": "phpcs --standard=PSR12 src tests",
+		"ci:php:sniff:strict": "phpcs src tests",
 		"ci:php:stan": "phpstan analyse --no-progress",
-		"ci:php:unit": "phpunit",
 		"ci:static": [
 			"@ci:composer",
-			"@ci:php",
-			"@ci:yaml:lint"
+			"@ci:php"
 		],
 		"ci:tests": [
 			"@ci:tests:unit",
-			"@ci:tests:functional"
+			"@ci:tests:functional",
+			"@ci:tests:smoke"
 		],
-		"ci:tests:functional": "phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-functional.xml --testsuite \"Functional Test Suite\"",
-		"ci:tests:unit": "phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Unit Test Suite\"",
-		"ci:yaml:lint": "yaml-lint .ddev config",
+		"ci:tests:functional": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-functional.xml --testsuite \"Functional Test Suite\"'",
+		"ci:tests:smoke": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Smoke Test Suite\"'",
+		"ci:tests:unit": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Unit Test Suite\"'",
 		"clean": [
 			"@tools:setup:clean",
 			"rm -fr vendor .php-cs-fixer.cache .phplint-cache composer.lock"
@@ -126,30 +132,23 @@
 		],
 		"fix:php:cs": "php-cs-fixer fix",
 		"fix:php:sniff": "phpcbf --standard=PSR12 src",
-		"test": [
-			"@test:php:lint",
-			"@test:php:unit"
-		],
-		"test:composer:project:add": [
-			"(test -d .build/project && rm -fr .build/project) || true",
-			"mkdir -p .build/project",
-			"cp tests/project/composer.json .build/project/composer.json",
-			"@composer install -d.build/project",
-			".build/project/vendor/bin/composer update -d.build/project",
-			".build/project/vendor/bin/composer typo3:patch:apply 72837 -d.build/project -t",
-			".build/project/vendor/bin/composer validate -d.build/project"
-		],
-		"test:composer:project:remove": [
-			"test -f .build/project/composer.lock",
-			".build/project/vendor/bin/composer typo3:patch:remove 72837 -d.build/project",
-			".build/project/vendor/bin/composer validate -d.build/project"
-		],
-		"test:php:lint": [
-			"phplint"
-		],
 		"test:php:unit": [
 			"Composer\\Config::disableProcessTimeout",
 			"phpunit"
+		],
+		"test:typo3:patch:apply": [
+			"(test -d .build/project && rm -fr .build/project) || true",
+			"mkdir -p .build/project",
+			"cp tests/project/composer.json .build/project/composer.json",
+			"@composer install -d.build/project --ansi",
+			".build/project/vendor/bin/composer update -d.build/project --ansi",
+			".build/project/vendor/bin/composer typo3:patch:apply 72837 -d.build/project --ansi -t",
+			".build/project/vendor/bin/composer validate -d.build/project --ansi"
+		],
+		"test:typo3:patch:remove": [
+			"test -f .build/project/composer.lock",
+			".build/project/vendor/bin/composer typo3:patch:remove 72837 -d.build/project --ansi",
+			".build/project/vendor/bin/composer validate -d.build/project --ansi"
 		],
 		"tools": [
 			"@tools:static"
@@ -177,9 +176,8 @@
 			"@tools:php:sniff",
 			"@tools:php:stan"
 		],
-		"tools:php:cgl": "php-cs-fixer --diff -v fix --format=junit > var/log/php-cs-fixer.xml",
 		"tools:php:copypaste": "phpcpd src tests",
-		"tools:php:cs-fixer": "@php ./tools/php-cs-fixer fix --config .php_cs.php",
+		"tools:php:cs-fixer": "php-cs-fixer fix -v --dry-run --diff",
 		"tools:php:lint": "phplint",
 		"tools:php:rector": "rector process --dry-run --no-progress-bar --no-diffs",
 		"tools:php:rector:process": "rector process --no-diffs",
@@ -196,9 +194,11 @@
 		],
 		"tools:tests": [
 			"@tools:tests:unit",
-			"@tools:tests:functional"
+			"@tools:tests:functional",
+			"@tools:tests:smoke"
 		],
 		"tools:tests:functional": "phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-functional.xml --testsuite \"Functional Test Suite\"",
+		"tools:tests:smoke": "phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Smoke Test Suite\"",
 		"tools:tests:unit": "phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Unit Test Suite\"",
 		"tools:yaml:lint": "yaml-lint .ddev"
 	}

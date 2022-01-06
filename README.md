@@ -1,5 +1,7 @@
 # TYPO3 Core Patches
 
+[![Continuous Integration (CI)](https://github.com/GsTYPO3/core-patches/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/GsTYPO3/core-patches/actions/workflows/continuous-integration.yml)
+
 This package let you easily manage TYPO3 Core patches with Composer with the help
 of `cweagans/composer-patches` which is a dependency of this package and requires
 to be installed as non-dev dependency.
