@@ -22,7 +22,7 @@ dependency for production usage.
 Require this package as normal dependency:
 
 ```bash
-composer require gilbertsoft/typo3-core-patches
+composer require gilbertsoft/typo3-core-patches 0.1.x@dev
 ```
 
 If the package is installed as dev requirement, the patches won't get applied
