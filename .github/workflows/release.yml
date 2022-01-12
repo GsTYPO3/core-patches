@@ -1,0 +1,42 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Release Mode, possible values are "draft" or "publish"'
+        required: true
+        default: 'draft'
+
+jobs:
+  create_release:
+    name: Create new release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Calculate release version
+        id: version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: release-drafter/release-drafter@v5
+        with:
+          commitish: ${{ github.ref }}
+          disable-autolabeler: true
+
+      - name: Print calculated version
+        env:
+          VERSION_OUTPUTS: ${{ toJSON(steps.version.outputs) }}
+        run: |
+          echo "$VERSION_OUTPUTS"
+
+      - name: Create release
+        id: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: release-drafter/release-drafter@v5
+        with:
+          publish: ${{ github.event.inputs.mode == 'publish' }}
+          commitish: ${{ github.ref }}
+          disable-autolabeler: true
