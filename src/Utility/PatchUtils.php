@@ -16,9 +16,10 @@ namespace GsTYPO3\CorePatches\Utility;
 use Composer\Composer;
 use Composer\IO\IOInterface;
 use Composer\Semver\Constraint\MatchAllConstraint;
-use UnexpectedValueException;
+use GsTYPO3\CorePatches\Exception\InvalidPatchException;
+use GsTYPO3\CorePatches\Exception\NoPatchException;
 
-final class PatchCreator
+final class PatchUtils
 {
     /** @var Composer */
     private $composer;
@@ -37,8 +38,9 @@ final class PatchCreator
      * @param string    $patch          The raw patch.
      * @param string    $destination    The destination relative to the composer root folder. Defaults to 'patches'.
      * @param bool      $includeTests   If set to true changes in test files are skiped. Defaults to false.
-     * @return array<string, array<string, string>>    The patch split to core packages.
-     * @throws UnexpectedValueException
+     * @return array<string, array<string, string>>    The patches split to core packages.
+     * @throws InvalidPatchException
+     * @throws NoPatchException
      */
     public function create(
         int $numericId,
@@ -56,16 +58,45 @@ final class PatchCreator
     }
 
     /**
+     * @param array<int, int>                       $numericIds The numeric IDs of the patches to remove.
+     * @param array<string, array<string, string>>  $patches    The available patches.
+     * @return array<string, array<string, string>> The removed patches.
+     */
+    public function remove(array $numericIds, array $patches): array
+    {
+        $patchesRemoved = [];
+
+        foreach ($numericIds as $numericId) {
+            foreach ($patches as $packageName => $packagePatches) {
+                foreach ($packagePatches as $subject => $patchFileName) {
+                    if (strpos($patchFileName, '-review-' . $numericId . '.patch') !== false) {
+                        $this->io->write(sprintf('  - Removing patch <info>%s</info>', $patchFileName));
+
+                        $patchesRemoved[$packageName] = array_merge(
+                            $patchesRemoved[$packageName] ?? [],
+                            [$subject => $patchFileName]
+                        );
+
+                        unlink($patchFileName);
+                    }
+                }
+            }
+        }
+
+        return $patchesRemoved;
+    }
+
+    /**
      * @param string    $patch          The raw patch.
      * @param bool      $includeTests   If set to true changes in test files are also included. Defaults to false.
      * @return array<string, array<int, string>>    The patch split into core packages.
-     * @throws UnexpectedValueException
+     * @throws InvalidPatchException
      */
     public function split(string $patch, bool $includeTests): array
     {
         // Extract patch message
         if (($nextPatchPos = strpos($patch, 'diff --git')) === false) {
-            throw new UnexpectedValueException('Patch message end not found.', 1640955563);
+            throw new InvalidPatchException('End of patch message not found.');
         }
 
         $patchMessage = substr($patch, 0, $nextPatchPos);
@@ -133,10 +164,18 @@ final class PatchCreator
      * @param string                            $subject        The subject.
      * @param array<string, array<int, string>> $patches
      * @return array<string, array<string, string>>    The patch split to core packages.
-     * @throws UnexpectedValueException
+     * @throws NoPatchException
      */
-    public function save(string $destination, int $numericId, string $subject, array $patches): array
-    {
+    public function save(
+        string $destination,
+        int $numericId,
+        string $subject,
+        array $patches
+    ): array {
+        if ($patches === []) {
+            throw new NoPatchException('No patches provided to save.');
+        }
+
         if (!file_exists($destination)) {
             mkdir($destination, 0777, true);
         }
@@ -145,7 +184,12 @@ final class PatchCreator
 
         foreach ($patches as $packageName => $chunks) {
             $content = implode('', $chunks);
-            $patchFileName = $destination . '/' . $numericId . '-' . str_replace('/', '-', $packageName) . '.patch';
+            $patchFileName = sprintf(
+                '%s/%s-review-%s.patch',
+                $destination,
+                str_replace('/', '-', $packageName),
+                $numericId
+            );
             $this->io->write(sprintf('  - Creating patch <info>%s</info>', $patchFileName));
             file_put_contents($patchFileName, $content);
             $composerChanges[$packageName] = [$subject => $patchFileName];
