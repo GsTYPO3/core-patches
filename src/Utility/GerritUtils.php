@@ -15,15 +15,18 @@ namespace GsTYPO3\CorePatches\Utility;
 
 use Composer\Util\Http\Response;
 use Composer\Util\HttpDownloader;
-use RuntimeException;
-use UnexpectedValueException;
+use GsTYPO3\CorePatches\Exception\InvalidResponseException;
+use GsTYPO3\CorePatches\Exception\UnexpectedResponseException;
+use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 
-final class Gerrit
+final class GerritUtils
 {
     private const BASE_URL = 'https://review.typo3.org/';
 
     /** @var HttpDownloader */
     private $downloader;
+    /** @var array<string, array<string, mixed>>|null */
+    private $changeInfo;
 
     /**
      * @param HttpDownloader $downloader    A HttpDownloader instance
@@ -36,41 +39,52 @@ final class Gerrit
     /**
      * @param string    $changeId   The change ID
      * @return mixed[]              The change info
-     * @throws RuntimeException
+     * @throws InvalidResponseException
+     *
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-id
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-info
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#get-change
      */
     public function getChange(string $changeId): array
     {
-        // Support for full review URLs
-        if (preg_match('#^' . self::BASE_URL . 'c/Packages/TYPO3.CMS/\+/(\d+)#', $changeId, $matches) === 1) {
-            $changeId = $matches[1];
+        if (!isset($this->changeInfo[$changeId])) {
+            // Support for full review URLs
+            if (
+                preg_match(
+                    '#^' . preg_quote(self::BASE_URL) . 'c/Packages/TYPO3.CMS/\+/(\d+)#',
+                    $changeId,
+                    $matches
+                ) === 1
+            ) {
+                $changeId = $matches[1];
+            }
+
+            $url = sprintf(self::BASE_URL . 'changes/%s', $changeId);
+            $response = $this->downloader->get($url);
+            $body = $this->checkResponse($response);
+
+            // Remove leading markers
+            if (strpos($body, ')]}\'') === 0) {
+                $body = substr($body, 4);
+            }
+
+            $changeInfo = json_decode(trim($body), true);
+
+            if ($changeInfo === null || !is_array($changeInfo)) {
+                throw new InvalidResponseException('Error invalid response.', 1640784346);
+            }
+            $this->changeInfo[$changeId] = $changeInfo;
         }
 
-        $url = sprintf(self::BASE_URL . 'changes/%s', $changeId);
-        $response = $this->downloader->get($url);
-        //$body = file_get_contents($url);
-        $body = $this->checkResponse($response);
-
-        // Remove leading markers
-        if (strpos($body, ')]}\'') === 0) {
-            $body = substr($body, 4);
-        }
-
-        $changeInfo = json_decode(trim($body), true);
-
-        if ($changeInfo === null || !is_array($changeInfo)) {
-            throw new RuntimeException('Error invalid response.', 1640784346);
-        }
-
-        return $changeInfo;
+        return $this->changeInfo[$changeId];
     }
 
     /**
      * @param string    $changeId   The change ID
      * @return string               The normalized subject
      * @throws UnexpectedValueException
+     * @throws InvalidResponseException
+     *
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-id
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-info
      */
@@ -93,6 +107,8 @@ final class Gerrit
      * @param string    $changeId   The change ID
      * @return int                  The legacy numeric ID
      * @throws UnexpectedValueException
+     * @throws InvalidResponseException
+     *
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-id
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-info
      */
@@ -110,7 +126,8 @@ final class Gerrit
     /**
      * @param string    $changeId   The change ID
      * @return string               The patch
-     * @throws RuntimeException
+     * @throws InvalidResponseException
+     *
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-id
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#get-patch
      */
@@ -118,11 +135,10 @@ final class Gerrit
     {
         $url = sprintf(self::BASE_URL . 'changes/%s/revisions/current/patch', $changeId);
         $response = $this->downloader->get($url);
-        //$body = file_get_contents($url);
         $patch = base64_decode($this->checkResponse($response), true);
 
         if ($patch === false) {
-            throw new RuntimeException('Error invalid response.', 1640784347);
+            throw new InvalidResponseException('Error invalid response.');
         }
 
         return $patch;
@@ -134,16 +150,23 @@ final class Gerrit
      * @param Response  $response           The response object
      * @param int       $expectedStatusCode The expected status code, defaults to 200
      * @return string                       The body
-     * @throws RuntimeException
+     * @throws UnexpectedResponseException
      */
     private function checkResponse(Response $response, int $expectedStatusCode = 200): string
     {
         if (($statusCode = $response->getStatusCode()) !== $expectedStatusCode) {
-            throw new RuntimeException(sprintf('Unexpected status code "%d".', $statusCode), 1640783526);
+            throw new UnexpectedResponseException(sprintf(
+                'Unexpected status code "%d", expected "%d".',
+                $statusCode,
+                $expectedStatusCode
+            ));
         }
 
         if (!is_string($body = $response->getBody())) {
-            throw new RuntimeException(sprintf('Unexpected answer "%s".', gettype($body)), 1640783527);
+            throw new UnexpectedResponseException(sprintf(
+                'Unexpected response "%s".',
+                gettype($body)
+            ));
         }
 
         return $body;

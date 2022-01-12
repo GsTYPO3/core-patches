@@ -142,12 +142,12 @@
 			"cp tests/project/composer.json .build/project/composer.json",
 			"@composer install -d.build/project --ansi",
 			".build/project/vendor/bin/composer update -d.build/project --ansi",
-			".build/project/vendor/bin/composer typo3:patch:apply 72837 -d.build/project --ansi -t",
+			".build/project/vendor/bin/composer typo3:patch:apply 72979 -d.build/project --ansi -t",
 			".build/project/vendor/bin/composer validate -d.build/project --ansi"
 		],
 		"test:typo3:patch:remove": [
 			"test -f .build/project/composer.lock",
-			".build/project/vendor/bin/composer typo3:patch:remove 72837 -d.build/project --ansi",
+			".build/project/vendor/bin/composer typo3:patch:remove 72979 -d.build/project --ansi",
 			".build/project/vendor/bin/composer validate -d.build/project --ansi"
 		],
 		"tools": [
