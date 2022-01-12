@@ -7,6 +7,8 @@ on:
   pull_request:
     paths-ignore:
       - '.ddev/**'
+  schedule:
+    - cron:  '44 4 * * *'
 
 env:
   COMPOSER_FLAGS: --ansi --no-interaction --no-progress --prefer-dist
