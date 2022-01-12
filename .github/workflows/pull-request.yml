@@ -24,7 +24,7 @@ jobs:
 
   assign_labels:
     name: Assign Labels
-    needs: check-commit-message
+    needs: check_commit_message
     runs-on: ubuntu-latest
     steps:
       - name: Assign and check labels
