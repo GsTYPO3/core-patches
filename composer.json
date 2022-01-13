@@ -25,7 +25,7 @@
 		"source": "https://github.com/GsTYPO3/core-patches"
 	},
 	"require": {
-		"php": "^7.2.5 || ^8.0",
+		"php": "^7.4.1 || ^8.0",
 		"ext-json": "*",
 		"composer-plugin-api": "^2.0",
 		"cweagans/composer-patches": "^1.7"
@@ -115,6 +115,7 @@
 		"ci:tests:functional": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-functional.xml --testsuite \"Functional Test Suite\"'",
 		"ci:tests:smoke": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Smoke Test Suite\"'",
 		"ci:tests:unit": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Unit Test Suite\"'",
+		"ci:yaml:lint": "yaml-lint .ddev .github",
 		"clean": [
 			"@tools:setup:clean",
 			"rm -fr vendor .php-cs-fixer.cache .phplint-cache composer.lock"
@@ -201,6 +202,6 @@
 		"tools:tests:functional": "phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-functional.xml --testsuite \"Functional Test Suite\"",
 		"tools:tests:smoke": "phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Smoke Test Suite\"",
 		"tools:tests:unit": "phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Unit Test Suite\"",
-		"tools:yaml:lint": "yaml-lint .ddev"
+		"tools:yaml:lint": "yaml-lint .ddev .github"
 	}
 }

@@ -15,6 +15,7 @@ namespace GsTYPO3\CorePatches;
 
 use Composer\Composer;
 use Composer\IO\IOInterface;
+use Composer\Plugin\Capability\CommandProvider as ComposerCommandProvider;
 use Composer\Plugin\Capable;
 use Composer\Plugin\PluginInterface;
 
@@ -54,7 +55,7 @@ final class Plugin implements PluginInterface, Capable
     public function getCapabilities()
     {
         return [
-            'Composer\Plugin\Capability\CommandProvider' => 'GsTYPO3\CorePatches\CommandProvider',
+            ComposerCommandProvider::class => CommandProvider::class,
         ];
     }
 }

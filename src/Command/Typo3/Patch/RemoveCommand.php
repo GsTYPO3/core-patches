@@ -57,7 +57,7 @@ final class RemoveCommand extends BaseCommand
 
         // Get Composer instance
         if (!($composer = $this->getComposer(true)) instanceof Composer) {
-            throw new UnexpectedValueException('Invalid Composer instance.', 1640857366);
+            throw new UnexpectedValueException('Invalid Composer instance.', 1_640_857_366);
         }
 
         $io = $this->getIO();

@@ -21,10 +21,8 @@ use GsTYPO3\CorePatches\Exception\NoPatchException;
 
 final class PatchUtils
 {
-    /** @var Composer */
-    private $composer;
-    /** @var IOInterface */
-    private $io;
+    private Composer $composer;
+    private IOInterface $io;
 
     public function __construct(Composer $composer, IOInterface $io)
     {

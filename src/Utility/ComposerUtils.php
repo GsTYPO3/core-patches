@@ -36,16 +36,11 @@ final class ComposerUtils
     private const EXTRA_APPLIED_CHANGES = 'applied-changes';
     private const EXTRA_PREFERRED_INSTALL_CHANGED = 'preferred-install-changed';
 
-    /** @var Composer */
-    private $composer;
-    /** @var IOInterface */
-    private $io;
-    /** @var Application */
-    private $application;
-    /** @var JsonFile */
-    private $configFile;
-    /** @var JsonConfigSource */
-    private $configSource;
+    private Composer $composer;
+    private IOInterface $io;
+    private Application $application;
+    private JsonFile $configFile;
+    private JsonConfigSource $configSource;
 
     public function __construct(Composer $composer, IOInterface $io)
     {
@@ -216,9 +211,7 @@ final class ComposerUtils
             return;
         }
 
-        $currentValue = array_filter($currentValue, function ($value) use ($numericId) {
-            return $value !== $numericId;
-        });
+        $currentValue = array_filter($currentValue, fn ($value) => $value !== $numericId);
         sort($currentValue);
 
         $this->configSource->addProperty(
@@ -262,9 +255,7 @@ final class ComposerUtils
             return;
         }
 
-        $currentValue = array_filter($currentValue, function ($value) use ($packageName) {
-            return $value !== $packageName;
-        });
+        $currentValue = array_filter($currentValue, fn ($value) => $value !== $packageName);
         sort($currentValue);
 
         $this->configSource->addProperty(
@@ -347,7 +338,7 @@ final class ComposerUtils
             $this->addPatchesToConfigFile($patches);
             $this->addAppliedChange($numericId);
 
-            $affectedPackages = array_merge($affectedPackages, array_keys($patches));
+            $affectedPackages = [...$affectedPackages, ...array_keys($patches)];
 
             $patchesCount += $patchesCreated;
         }
@@ -377,9 +368,7 @@ final class ComposerUtils
                         $promises[] = $this->uninstallPackage($package);
 
                         // Remove package from the array
-                        $affectedPackages = array_filter($affectedPackages, function ($value) use ($packageName) {
-                            return $value !== $packageName;
-                        });
+                        $affectedPackages = array_filter($affectedPackages, fn ($value) => $value !== $packageName);
                     }
                 }
 
