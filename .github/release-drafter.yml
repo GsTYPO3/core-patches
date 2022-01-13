@@ -3,7 +3,7 @@ tag-template: '$RESOLVED_VERSION'
 categories:
   - title: '🚀 Features'
     label: 'enhancement'
-  - title: '🐛 Bug Fixes'
+  - title: '🐞 Bug Fixes'
     label: 'bug'
   - title: '🧰 Maintenance'
     label: 'maintenance'
