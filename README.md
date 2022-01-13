@@ -1,7 +1,7 @@
 # TYPO3 Core Patches
 
 [![Packagist Version](https://img.shields.io/packagist/v/gilbertsoft/typo3-core-patches)](https://packagist.org/packages/gilbertsoft/typo3-core-patches)
-![Packagist PHP Version Support](https://img.shields.io/packagist/php-v/gilbertsoft/typo3-core-patches)
+[![Packagist PHP Version Support](https://img.shields.io/packagist/php-v/gilbertsoft/typo3-core-patches)](https://packagist.org/packages/gilbertsoft/typo3-core-patches)
 [![GitHub issues](https://img.shields.io/github/issues/GsTYPO3/core-patches)](https://github.com/GsTYPO3/core-patches/issues)
 [![GitHub forks](https://img.shields.io/github/forks/GsTYPO3/core-patches)](https://github.com/GsTYPO3/core-patches/network)
 [![GitHub stars](https://img.shields.io/github/stars/GsTYPO3/core-patches)](https://github.com/GsTYPO3/core-patches/stargazers)
