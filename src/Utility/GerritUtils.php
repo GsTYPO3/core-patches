@@ -23,10 +23,9 @@ final class GerritUtils
 {
     private const BASE_URL = 'https://review.typo3.org/';
 
-    /** @var HttpDownloader */
-    private $downloader;
+    private HttpDownloader $downloader;
     /** @var array<string, array<string, mixed>>|null */
-    private $changeInfo;
+    private ?array $changeInfo = null;
 
     /**
      * @param HttpDownloader $downloader    A HttpDownloader instance
@@ -68,10 +67,10 @@ final class GerritUtils
                 $body = substr($body, 4);
             }
 
-            $changeInfo = json_decode(trim($body), true);
+            $changeInfo = json_decode(trim($body), true, 512, JSON_THROW_ON_ERROR);
 
             if ($changeInfo === null || !is_array($changeInfo)) {
-                throw new InvalidResponseException('Error invalid response.', 1640784346);
+                throw new InvalidResponseException('Error invalid response.');
             }
             $this->changeInfo[$changeId] = $changeInfo;
         }
@@ -93,11 +92,11 @@ final class GerritUtils
         $changeInfo = $this->getChange($changeId);
 
         if (!is_string($subject = ($changeInfo['subject'] ?? null))) {
-            throw new UnexpectedValueException('Subject was not found.', 1640944473);
+            throw new UnexpectedValueException('Subject was not found.');
         }
 
         if (($normalizedSubject = preg_replace('/^\[.+?\] /', '', $subject)) === null) {
-            throw new UnexpectedValueException(sprintf('Subject "%s" could not be normalized.', $subject), 1640944474);
+            throw new UnexpectedValueException(sprintf('Subject "%s" could not be normalized.', $subject));
         }
 
         return $normalizedSubject;
@@ -117,7 +116,7 @@ final class GerritUtils
         $changeInfo = $this->getChange($changeId);
 
         if (!is_int($numericId = ($changeInfo['_number'] ?? null))) {
-            throw new UnexpectedValueException('Number was not found.', 1640944475);
+            throw new UnexpectedValueException('Number was not found.');
         }
 
         return $numericId;
