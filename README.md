@@ -1,6 +1,13 @@
 # TYPO3 Core Patches
 
+[![Packagist Version](https://img.shields.io/packagist/v/gilbertsoft/typo3-core-patches)](https://packagist.org/packages/gilbertsoft/typo3-core-patches)
+![Packagist PHP Version Support](https://img.shields.io/packagist/php-v/gilbertsoft/typo3-core-patches)
+[![GitHub issues](https://img.shields.io/github/issues/GsTYPO3/core-patches)](https://github.com/GsTYPO3/core-patches/issues)
+[![GitHub forks](https://img.shields.io/github/forks/GsTYPO3/core-patches)](https://github.com/GsTYPO3/core-patches/network)
+[![GitHub stars](https://img.shields.io/github/stars/GsTYPO3/core-patches)](https://github.com/GsTYPO3/core-patches/stargazers)
+[![GitHub license](https://img.shields.io/github/license/GsTYPO3/core-patches)](https://github.com/GsTYPO3/core-patches/blob/main/LICENSE)
 [![Continuous Integration (CI)](https://github.com/GsTYPO3/core-patches/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/GsTYPO3/core-patches/actions/workflows/continuous-integration.yml)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](https://github.com/GsTYPO3/core-patches/blob/main/CODE_OF_CONDUCT.md)
 
 This package let you easily manage TYPO3 Core patches with Composer based on
 [cweagans/composer-patches](https://github.com/cweagans/composer-patches#readme)
@@ -94,9 +101,8 @@ composer typo3:patch:apply https://review.typo3.org/c/Packages/TYPO3.CMS/+/12345
 Bug reports, feature requests and pull requests are welcome in the [GitHub
 repository](https://github.com/GsTYPO3/core-patches).
 
-Currently there is an [on going issue](https://github.com/GsTYPO3/core-patches/issues/1)
-to provide feedback. For bigger requests please open a dedicated issue instead.
+For support questions or other discussions please use the [GitHub Discussions](https://github.com/GsTYPO3/core-patches/discussions).
 
 ## License
 
-This package is licensed under the [MIT License](LICENSE).
+This package is licensed under the [MIT License](https://github.com/GsTYPO3/core-patches/blob/main/LICENSE).
