@@ -120,8 +120,14 @@ final class PatchUtils
             }
 
             // Lookup core package name and file name, skip other files
-            if (preg_match('#^diff --git a/typo3/sysext/([^/]+)/([^ ]+)#', $buffer, $matches) === false) {
-                $this->io->write(sprintf('  - Skipping file <info>%s</info>', $matches[2]));
+            if (preg_match('#^diff --git a/typo3/sysext/([^/]+)/([^ ]+)#', $buffer, $matches) !== 1) {
+                if (preg_match('#^diff --git a/([^ ]+)#', $buffer, $matches) === 1) {
+                    $fileName = $matches[1];
+                } else {
+                    $fileName = 'unknown';
+                }
+
+                $this->io->write(sprintf('  - Skipping file <info>%s</info>', $fileName));
                 continue;
             }
 

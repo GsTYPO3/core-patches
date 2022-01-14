@@ -55,7 +55,7 @@ final class GerritUtils
                     $matches
                 ) === 1
             ) {
-                $changeId = $matches[1];
+                $changeId = (string)$matches[1];
             }
 
             $url = sprintf(self::BASE_URL . 'changes/%s', $changeId);
@@ -72,6 +72,7 @@ final class GerritUtils
             if ($changeInfo === null || !is_array($changeInfo)) {
                 throw new InvalidResponseException('Error invalid response.');
             }
+            /** @var array<string, mixed> $changeInfo */
             $this->changeInfo[$changeId] = $changeInfo;
         }
 

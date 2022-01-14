@@ -421,6 +421,12 @@ jobs:
         if: contains(matrix.dependencies, 'highest')
         run: composer config minimum-stability alpha
 
+      - name: Enforce Composer 2.1 for PHP 8
+        if: ${{ matrix.php-version != '7.4' }}
+        run: |
+          composer require ${{ env.COMPOSER_FLAGS }} --dev --no-update composer/composer ^2.1
+          composer require ${{ env.COMPOSER_FLAGS }} -dtests/project --dev --no-update composer/composer ^2.1
+
       - name: Install dependencies
         run: composer update ${{ env.COMPOSER_UPDATE_FLAGS }} ${{ env.COMPOSER_FLAGS }}
 
