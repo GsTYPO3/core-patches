@@ -84,21 +84,22 @@ final class ComposerUtils
     }
 
     /**
-     * @return array<string, string>
+     * @return array<int, string>
      */
-    private function getPreferredInstall(): array
+    private function getPreferredInstallChanged(): array
     {
         $config = $this->configFile->read();
 
         if (
             !is_array($config)
-            || !is_array($config[self::CONFIG] ?? null)
-            || !is_array($config[self::CONFIG][self::CONFIG_PREFERRED_INSTALL] ?? null)
+            || !is_array($config[self::EXTRA] ?? null)
+            || !is_array($config[self::EXTRA][self::EXTRA_BASE] ?? null)
+            || !is_array($config[self::EXTRA][self::EXTRA_BASE][self::EXTRA_PREFERRED_INSTALL_CHANGED] ?? null)
         ) {
             return [];
         }
 
-        return $config[self::CONFIG][self::CONFIG_PREFERRED_INSTALL];
+        return $config[self::EXTRA][self::EXTRA_BASE][self::EXTRA_PREFERRED_INSTALL_CHANGED];
     }
 
     /**
@@ -121,137 +122,21 @@ final class ComposerUtils
     }
 
     /**
-     * @return array<int, string>
+     * @return array<string, string>
      */
-    private function getPreferredInstallChanged(): array
+    private function getPreferredInstall(): array
     {
         $config = $this->configFile->read();
 
         if (
             !is_array($config)
-            || !is_array($config[self::EXTRA] ?? null)
-            || !is_array($config[self::EXTRA][self::EXTRA_BASE] ?? null)
-            || !is_array($config[self::EXTRA][self::EXTRA_BASE][self::EXTRA_PREFERRED_INSTALL_CHANGED] ?? null)
+            || !is_array($config[self::CONFIG] ?? null)
+            || !is_array($config[self::CONFIG][self::CONFIG_PREFERRED_INSTALL] ?? null)
         ) {
             return [];
         }
 
-        return $config[self::EXTRA][self::EXTRA_BASE][self::EXTRA_PREFERRED_INSTALL_CHANGED];
-    }
-
-    /**
-     * @return array<string, array<string, string>>
-     */
-    private function getPatches(): array
-    {
-        $config = $this->configFile->read();
-
-        if (
-            !is_array($config)
-            || !is_array($config[self::EXTRA] ?? null)
-            || !is_array($config[self::EXTRA]['patches'] ?? null)
-        ) {
-            return [];
-        }
-
-        return $config[self::EXTRA]['patches'];
-    }
-
-    /**
-     * @param array<string, array<string, string>> $patches
-     */
-    private function addPatchesToConfigFile(array $patches): void
-    {
-        foreach ($patches as $packageName => $packagePatches) {
-            $this->configSource->addProperty(sprintf('extra.patches.%s', $packageName), $packagePatches);
-        }
-    }
-
-    /**
-     * @param array<string, array<string, string>> $patches
-     */
-    private function removePatchesFromConfigFile(array $patches): void
-    {
-        foreach (array_keys($patches) as $packageName) {
-            $this->configSource->removeProperty(sprintf('extra.patches.%s', $packageName));
-        }
-    }
-
-    private function setSourceInstall(string $packageName): void
-    {
-        $currentValue = $this->getPreferredInstall();
-
-        if (isset($currentValue[$packageName]) && $currentValue[$packageName] === 'source') {
-            // source install for this package is already configured, skip it
-            return;
-        }
-
-        $this->configSource->addConfigSetting(
-            'preferred-install.' . $packageName,
-            'source'
-        );
-
-        $this->addPreferredInstallChanged($packageName);
-    }
-
-    private function unsetSourceInstall(string $packageName): void
-    {
-        $currentValue = $this->getPreferredInstallChanged();
-
-        if (!in_array($packageName, $currentValue, true)) {
-            // source was not set by this package, skip removal
-            return;
-        }
-
-        $this->configSource->removeConfigSetting(
-            'preferred-install.' . $packageName
-        );
-
-        $this->removePreferredInstallChanged($packageName);
-    }
-
-    private function addAppliedChange(int $numericId): void
-    {
-        $currentValue = $this->getAppliedChanges();
-
-        if (in_array($numericId, $currentValue, true)) {
-            // the package is already listed, skip addition
-            return;
-        }
-
-        $currentValue[] = $numericId;
-        sort($currentValue);
-
-        $this->configSource->addProperty(
-            sprintf(
-                'extra.%s.%s',
-                self::EXTRA_BASE,
-                self::EXTRA_APPLIED_CHANGES
-            ),
-            $currentValue
-        );
-    }
-
-    private function removeAppliedChange(int $numericId): void
-    {
-        $currentValue = $this->getAppliedChanges();
-
-        if (!in_array($numericId, $currentValue, true)) {
-            // the package is not listed, skip removal
-            return;
-        }
-
-        $currentValue = array_filter($currentValue, fn ($value): bool => $value !== $numericId);
-        sort($currentValue);
-
-        $this->configSource->addProperty(
-            sprintf(
-                'extra.%s.%s',
-                self::EXTRA_BASE,
-                self::EXTRA_APPLIED_CHANGES
-            ),
-            $currentValue
-        );
+        return $config[self::CONFIG][self::CONFIG_PREFERRED_INSTALL];
     }
 
     private function addPreferredInstallChanged(string $packageName): void
@@ -293,6 +178,121 @@ final class ComposerUtils
                 'extra.%s.%s',
                 self::EXTRA_BASE,
                 self::EXTRA_PREFERRED_INSTALL_CHANGED
+            ),
+            $currentValue
+        );
+    }
+
+    /**
+     * @param array<string, array<string, string>> $patches
+     */
+    private function addPatchesToConfigFile(array $patches): void
+    {
+        foreach ($patches as $packageName => $packagePatches) {
+            $this->configSource->addProperty(sprintf('extra.patches.%s', $packageName), $packagePatches);
+        }
+    }
+
+    private function addAppliedChange(int $numericId): void
+    {
+        $currentValue = $this->getAppliedChanges();
+
+        if (in_array($numericId, $currentValue, true)) {
+            // the package is already listed, skip addition
+            return;
+        }
+
+        $currentValue[] = $numericId;
+        sort($currentValue);
+
+        $this->configSource->addProperty(
+            sprintf(
+                'extra.%s.%s',
+                self::EXTRA_BASE,
+                self::EXTRA_APPLIED_CHANGES
+            ),
+            $currentValue
+        );
+    }
+
+    private function setSourceInstall(string $packageName): void
+    {
+        $currentValue = $this->getPreferredInstall();
+
+        if (isset($currentValue[$packageName]) && $currentValue[$packageName] === 'source') {
+            // source install for this package is already configured, skip it
+            return;
+        }
+
+        $this->configSource->addConfigSetting(
+            'preferred-install.' . $packageName,
+            'source'
+        );
+
+        $this->addPreferredInstallChanged($packageName);
+    }
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    private function getPatches(): array
+    {
+        $config = $this->configFile->read();
+
+        if (
+            !is_array($config)
+            || !is_array($config[self::EXTRA] ?? null)
+            || !is_array($config[self::EXTRA]['patches'] ?? null)
+        ) {
+            return [];
+        }
+
+        return $config[self::EXTRA]['patches'];
+    }
+
+    /**
+     * @param array<string, array<string, string>> $patches
+     */
+    private function removePatchesFromConfigFile(array $patches): void
+    {
+        foreach (array_keys($patches) as $packageName) {
+            $this->configSource->removeProperty(sprintf('extra.patches.%s', $packageName));
+        }
+    }
+
+    private function unsetSourceInstall(string $packageName): void
+    {
+        $currentValue = $this->getPreferredInstallChanged();
+
+        if (!in_array($packageName, $currentValue, true)) {
+            // source was not set by this package, skip removal
+            return;
+        }
+
+        $this->configSource->removeConfigSetting(
+            'preferred-install.' . $packageName
+        );
+
+        $this->removePreferredInstallChanged($packageName);
+    }
+
+    private function removeAppliedChange(int $numericId): void
+    {
+        $currentValue = $this->getAppliedChanges();
+
+        if (!in_array($numericId, $currentValue, true)) {
+            // the package is not listed, skip removal
+            return;
+        }
+
+        $currentValue = array_filter($currentValue, fn ($value): bool => $value !== $numericId);
+        sort($currentValue);
+
+        $this->configSource->addProperty(
+            sprintf(
+                'extra.%s.%s',
+                self::EXTRA_BASE,
+                self::EXTRA_APPLIED_CHANGES
             ),
             $currentValue
         );
