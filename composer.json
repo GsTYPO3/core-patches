@@ -32,7 +32,7 @@
 	},
 	"require-dev": {
 		"bamarni/composer-bin-plugin": "^1.4",
-		"composer/composer": "^2.0",
+		"composer/composer": "^2.0.9",
 		"ergebnis/composer-normalize": "*"
 	},
 	"autoload": {
@@ -113,7 +113,12 @@
 			"@ci:tests:smoke"
 		],
 		"ci:tests:functional": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-functional.xml --testsuite \"Functional Test Suite\"'",
-		"ci:tests:smoke": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Smoke Test Suite\"'",
+		"ci:tests:smoke": [
+			"@composer test:typo3:patch:apply",
+			"@composer test:typo3:patch:remove",
+			"@composer test:typo3:patch:apply-with-tests",
+			"@composer test:typo3:patch:remove"
+		],
 		"ci:tests:unit": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Unit Test Suite\"'",
 		"ci:yaml:lint": "yaml-lint .ddev .github",
 		"clean": [
@@ -139,18 +144,30 @@
 			"phpunit"
 		],
 		"test:typo3:patch:apply": [
+			"@test:typo3:patch:setup",
+			".build/project/vendor/bin/composer typo3:patch:apply 73021 -d.build/project --ansi",
+			".build/project/vendor/bin/composer validate -d.build/project --ansi"
+		],
+		"test:typo3:patch:apply-with-tests": [
+			"@test:typo3:patch:setup",
+			".build/project/vendor/bin/composer typo3:patch:apply 73021 -d.build/project --ansi -t",
+			".build/project/vendor/bin/composer validate -d.build/project --ansi"
+		],
+		"test:typo3:patch:normalize": [
+			"@test:typo3:patch:setup",
+			".build/project/vendor/bin/composer normalize -d.build/project --ansi"
+		],
+		"test:typo3:patch:remove": [
+			"test -f .build/project/composer.lock",
+			".build/project/vendor/bin/composer typo3:patch:remove 73021 -d.build/project --ansi",
+			".build/project/vendor/bin/composer validate -d.build/project --ansi"
+		],
+		"test:typo3:patch:setup": [
 			"(test -d .build/project && rm -fr .build/project) || true",
 			"mkdir -p .build/project",
 			"cp tests/project/composer.json .build/project/composer.json",
 			"@composer install -d.build/project --ansi",
-			".build/project/vendor/bin/composer update -d.build/project --ansi",
-			".build/project/vendor/bin/composer typo3:patch:apply 72979 -d.build/project --ansi -t",
-			".build/project/vendor/bin/composer validate -d.build/project --ansi"
-		],
-		"test:typo3:patch:remove": [
-			"test -f .build/project/composer.lock",
-			".build/project/vendor/bin/composer typo3:patch:remove 72979 -d.build/project --ansi",
-			".build/project/vendor/bin/composer validate -d.build/project --ansi"
+			".build/project/vendor/bin/composer update -d.build/project --ansi"
 		],
 		"tools": [
 			"@tools:static"
@@ -199,9 +216,14 @@
 			"@tools:tests:functional",
 			"@tools:tests:smoke"
 		],
-		"tools:tests:functional": "phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-functional.xml --testsuite \"Functional Test Suite\"",
-		"tools:tests:smoke": "phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Smoke Test Suite\"",
-		"tools:tests:unit": "phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Unit Test Suite\"",
+		"tools:tests:functional": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-functional.xml --testsuite \"Functional Test Suite\"'",
+		"tools:tests:smoke": [
+			"@composer test:typo3:patch:apply",
+			"@composer test:typo3:patch:remove",
+			"@composer test:typo3:patch:apply-with-tests",
+			"@composer test:typo3:patch:remove"
+		],
+		"tools:tests:unit": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Unit Test Suite\"'",
 		"tools:yaml:lint": "yaml-lint .ddev .github"
 	}
 }
