@@ -13,6 +13,6 @@ namespace GsTYPO3\CorePatches\Exception;
 
 use Symfony\Component\Console\Exception\InvalidArgumentException as InvalidArgumentExceptionBase;
 
-class InvalidArgumentException extends InvalidArgumentExceptionBase implements ExceptionInterface
+final class InvalidArgumentException extends InvalidArgumentExceptionBase implements ExceptionInterface
 {
 }

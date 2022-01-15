@@ -13,6 +13,6 @@ namespace GsTYPO3\CorePatches\Exception;
 
 use Symfony\Component\Console\Exception\InvalidOptionException as InvalidOptionExceptionBase;
 
-class InvalidOptionException extends InvalidOptionExceptionBase implements ExceptionInterface
+final class InvalidOptionException extends InvalidOptionExceptionBase implements ExceptionInterface
 {
 }

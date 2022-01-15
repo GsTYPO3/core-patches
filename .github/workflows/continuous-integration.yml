@@ -8,7 +8,7 @@ on:
     paths-ignore:
       - '.ddev/**'
   schedule:
-    - cron:  '44 4 * * *'
+    - cron: '44 4 * * *'
 
 env:
   COMPOSER_FLAGS: --ansi --no-interaction --no-progress --prefer-dist
@@ -145,10 +145,48 @@ jobs:
       - name: Lint PHP files
         run: composer ci:php:lint
 
+  php_rector:
+    name: PHP Rector
+    needs:
+      - php_lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          coverage: none
+          extensions: intl, zip
+          ini-values: memory_limit=-1, error_reporting=E_ALL, display_errors=On
+          php-version: latest
+
+      - name: Composer Cache Vars
+        id: composer-cache-vars
+        run: |
+          echo "::set-output name=dir::$(composer config cache-files-dir)"
+          echo "::set-output name=timestamp::$(date +"%s")"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache-vars.outputs.dir }}
+          key: ${{ runner.os }}-composer-latest-${{ steps.composer-cache-vars.outputs.timestamp }}
+          restore-keys: |
+            ${{ runner.os }}-composer-latest-
+
+      - name: Install dependencies
+        run: composer install ${{ env.COMPOSER_FLAGS }}
+
+      - name: Validation of Rector rules for PHP files
+        run: composer ci:php:rector
+
   php_coding_standards:
     name: PHP Coding Standards
     needs:
-      - php_lint
+      - php_rector
     runs-on: ubuntu-latest
 
     steps:
@@ -186,7 +224,7 @@ jobs:
   php_sniff:
     name: PHP Code Sniffer
     needs:
-      - php_lint
+      - php_rector
     runs-on: ubuntu-latest
 
     steps:
@@ -224,7 +262,7 @@ jobs:
   php_copypaste_detector:
     name: PHP Copy/Paste Detector
     needs:
-      - php_lint
+      - php_rector
     runs-on: ubuntu-latest
 
     steps:
@@ -263,7 +301,6 @@ jobs:
     name: PHP Stan
     needs:
       - validation
-      - php_lint
       - php_coding_standards
       - php_sniff
       - php_copypaste_detector
@@ -338,10 +375,6 @@ jobs:
   tests:
     name: Tests
     needs:
-      - php_lint
-      - php_coding_standards
-      - php_sniff
-      - php_copypaste_detector
       - php_stan
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
