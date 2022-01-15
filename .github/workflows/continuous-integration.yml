@@ -221,10 +221,6 @@ jobs:
       - name: Validation of coding standards
         run: composer ci:php:sniff
 
-      - name: Strict validation of coding standards
-        continue-on-error: true
-        run: composer ci:php:sniff:strict
-
   php_copypaste_detector:
     name: PHP Copy/Paste Detector
     needs:
@@ -445,3 +441,5 @@ jobs:
         with:
           name: logs
           path: var/log
+          if-no-files-found: ignore
+          retention-days: 5
