@@ -92,6 +92,7 @@
 		],
 		"ci:php": [
 			"@ci:php:lint",
+			"@ci:php:rector",
 			"@ci:php:cs-fixer",
 			"@ci:php:sniff",
 			"@ci:php:copypaste",
@@ -100,6 +101,7 @@
 		"ci:php:copypaste": "phpcpd src tests",
 		"ci:php:cs-fixer": "php-cs-fixer fix -v --dry-run --using-cache no --diff",
 		"ci:php:lint": "phplint --no-progress",
+		"ci:php:rector": "rector process --dry-run --no-progress-bar",
 		"ci:php:sniff": "phpcs --standard=PSR12 src tests",
 		"ci:php:sniff:strict": "phpcs src tests",
 		"ci:php:stan": "phpstan analyse --no-progress",
@@ -134,10 +136,12 @@
 		],
 		"fix:composer:normalize": "@composer normalize",
 		"fix:php": [
+			"@fix:php:rector",
 			"@fix:php:sniff",
 			"@fix:php:cs"
 		],
 		"fix:php:cs": "php-cs-fixer fix",
+		"fix:php:rector": "rector process --no-diffs",
 		"fix:php:sniff": "phpcbf --standard=PSR12 src",
 		"test:php:unit": [
 			"Composer\\Config::disableProcessTimeout",
@@ -198,8 +202,7 @@
 		"tools:php:copypaste": "phpcpd src tests",
 		"tools:php:cs-fixer": "php-cs-fixer fix -v --dry-run --diff",
 		"tools:php:lint": "phplint",
-		"tools:php:rector": "rector process --dry-run --no-progress-bar --no-diffs",
-		"tools:php:rector:process": "rector process --no-diffs",
+		"tools:php:rector": "rector process --dry-run",
 		"tools:php:sniff": "phpcs --standard=PSR12 src tests",
 		"tools:php:sniff:strict": "phpcs src tests",
 		"tools:php:stan": "phpstan analyse",

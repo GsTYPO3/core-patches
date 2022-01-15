@@ -48,7 +48,7 @@ final class RemoveCommand extends BaseCommand
      * @throws InvalidArgumentException
      * @throws UnexpectedValueException
      */
-    public function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
         // Get parameters
         if (!is_array($changeIds = $input->getArgument('change-id'))) {

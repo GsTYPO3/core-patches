@@ -21,18 +21,22 @@ use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 
 final class GerritUtils
 {
+    /**
+     * @var string
+     */
     private const BASE_URL = 'https://review.typo3.org/';
 
     private HttpDownloader $downloader;
+
     /** @var array<string, array<string, mixed>>|null */
     private ?array $changeInfo = null;
 
     /**
-     * @param HttpDownloader $downloader    A HttpDownloader instance
+     * @param HttpDownloader $httpDownloader A HttpDownloader instance
      */
-    public function __construct(HttpDownloader $downloader)
+    public function __construct(HttpDownloader $httpDownloader)
     {
-        $this->downloader = $downloader;
+        $this->downloader = $httpDownloader;
     }
 
     /**
@@ -50,7 +54,7 @@ final class GerritUtils
             // Support for full review URLs
             if (
                 preg_match(
-                    '#^' . preg_quote(self::BASE_URL) . 'c/Packages/TYPO3.CMS/\+/(\d+)#',
+                    '#^' . preg_quote(self::BASE_URL, '#') . 'c/Packages/TYPO3.CMS/\+/(\d+)#',
                     $changeId,
                     $matches
                 ) === 1
@@ -63,7 +67,7 @@ final class GerritUtils
             $body = $this->checkResponse($response);
 
             // Remove leading markers
-            if (strpos($body, ')]}\'') === 0) {
+            if (strpos($body, ")]}'") === 0) {
                 $body = substr($body, 4);
             }
 
@@ -72,6 +76,7 @@ final class GerritUtils
             if ($changeInfo === null || !is_array($changeInfo)) {
                 throw new InvalidResponseException('Error invalid response.');
             }
+
             /** @var array<string, mixed> $changeInfo */
             $this->changeInfo[$changeId] = $changeInfo;
         }
@@ -96,7 +101,7 @@ final class GerritUtils
             throw new UnexpectedValueException('Subject was not found.');
         }
 
-        if (($normalizedSubject = preg_replace('/^\[.+?\] /', '', $subject)) === null) {
+        if (($normalizedSubject = preg_replace('#^\[.+?\] #', '', $subject)) === null) {
             throw new UnexpectedValueException(sprintf('Subject "%s" could not be normalized.', $subject));
         }
 

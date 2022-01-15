@@ -11,6 +11,6 @@
 
 namespace GsTYPO3\CorePatches\Exception;
 
-class NoPatchException extends UnexpectedValueException
+final class NoPatchException extends UnexpectedValueException
 {
 }

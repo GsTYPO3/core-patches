@@ -15,6 +15,7 @@ namespace GsTYPO3\CorePatches\Utility;
 
 use Composer\Composer;
 use Composer\IO\IOInterface;
+use Composer\Package\BasePackage;
 use Composer\Semver\Constraint\MatchAllConstraint;
 use GsTYPO3\CorePatches\Exception\InvalidPatchException;
 use GsTYPO3\CorePatches\Exception\NoPatchException;
@@ -22,6 +23,7 @@ use GsTYPO3\CorePatches\Exception\NoPatchException;
 final class PatchUtils
 {
     private Composer $composer;
+
     private IOInterface $io;
 
     public function __construct(Composer $composer, IOInterface $io)
@@ -121,11 +123,7 @@ final class PatchUtils
 
             // Lookup core package name and file name, skip other files
             if (preg_match('#^diff --git a/typo3/sysext/([^/]+)/([^ ]+)#', $buffer, $matches) !== 1) {
-                if (preg_match('#^diff --git a/([^ ]+)#', $buffer, $matches) === 1) {
-                    $fileName = $matches[1];
-                } else {
-                    $fileName = 'unknown';
-                }
+                $fileName = preg_match('#^diff --git a/([^ ]+)#', $buffer, $matches) === 1 ? $matches[1] : 'unknown';
 
                 $this->io->write(sprintf('  - Skipping file <info>%s</info>', $fileName));
                 continue;
@@ -140,7 +138,7 @@ final class PatchUtils
                 new MatchAllConstraint()
             );
 
-            if ($package === null) {
+            if (!$package instanceof BasePackage) {
                 $this->io->write(sprintf('  - Skipping package <info>%s</info>', $packageName));
                 continue;
             }

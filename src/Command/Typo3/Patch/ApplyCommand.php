@@ -65,7 +65,7 @@ final class ApplyCommand extends BaseCommand
      *
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-id
      */
-    public function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
         // Get parameters
         if (!is_array($changeIds = $input->getArgument('change-id'))) {

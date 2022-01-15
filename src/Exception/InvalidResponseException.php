@@ -11,6 +11,6 @@
 
 namespace GsTYPO3\CorePatches\Exception;
 
-class InvalidResponseException extends UnexpectedValueException
+final class InvalidResponseException extends UnexpectedValueException
 {
 }

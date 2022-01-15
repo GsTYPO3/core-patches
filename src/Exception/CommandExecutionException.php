@@ -11,6 +11,6 @@
 
 namespace GsTYPO3\CorePatches\Exception;
 
-class CommandExecutionException extends RuntimeException
+final class CommandExecutionException extends RuntimeException
 {
 }

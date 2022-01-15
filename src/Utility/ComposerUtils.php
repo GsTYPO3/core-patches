@@ -32,14 +32,44 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 final class ComposerUtils
 {
+    /**
+     * @var string
+     */
+    private const CONFIG = 'config';
+
+    /**
+     * @var string
+     */
+    private const CONFIG_PREFERRED_INSTALL = 'preferred-install';
+
+    /**
+     * @var string
+     */
+    private const EXTRA = 'extra';
+
+    /**
+     * @var string
+     */
     private const EXTRA_BASE = 'gilbertsoft/typo3-core-patches';
+
+    /**
+     * @var string
+     */
     private const EXTRA_APPLIED_CHANGES = 'applied-changes';
+
+    /**
+     * @var string
+     */
     private const EXTRA_PREFERRED_INSTALL_CHANGED = 'preferred-install-changed';
 
     private Composer $composer;
+
     private IOInterface $io;
+
     private Application $application;
+
     private JsonFile $configFile;
+
     private JsonConfigSource $configSource;
 
     public function __construct(Composer $composer, IOInterface $io)
@@ -62,13 +92,13 @@ final class ComposerUtils
 
         if (
             !is_array($config)
-            || !is_array($config['config'] ?? null)
-            || !is_array($config['config']['preferred-install'] ?? null)
+            || !is_array($config[self::CONFIG] ?? null)
+            || !is_array($config[self::CONFIG][self::CONFIG_PREFERRED_INSTALL] ?? null)
         ) {
             return [];
         }
 
-        return $config['config']['preferred-install'];
+        return $config[self::CONFIG][self::CONFIG_PREFERRED_INSTALL];
     }
 
     /**
@@ -80,14 +110,14 @@ final class ComposerUtils
 
         if (
             !is_array($config)
-            || !is_array($config['extra'] ?? null)
-            || !is_array($config['extra'][self::EXTRA_BASE] ?? null)
-            || !is_array($config['extra'][self::EXTRA_BASE][self::EXTRA_APPLIED_CHANGES] ?? null)
+            || !is_array($config[self::EXTRA] ?? null)
+            || !is_array($config[self::EXTRA][self::EXTRA_BASE] ?? null)
+            || !is_array($config[self::EXTRA][self::EXTRA_BASE][self::EXTRA_APPLIED_CHANGES] ?? null)
         ) {
             return [];
         }
 
-        return $config['extra'][self::EXTRA_BASE][self::EXTRA_APPLIED_CHANGES];
+        return $config[self::EXTRA][self::EXTRA_BASE][self::EXTRA_APPLIED_CHANGES];
     }
 
     /**
@@ -99,14 +129,14 @@ final class ComposerUtils
 
         if (
             !is_array($config)
-            || !is_array($config['extra'] ?? null)
-            || !is_array($config['extra'][self::EXTRA_BASE] ?? null)
-            || !is_array($config['extra'][self::EXTRA_BASE][self::EXTRA_PREFERRED_INSTALL_CHANGED] ?? null)
+            || !is_array($config[self::EXTRA] ?? null)
+            || !is_array($config[self::EXTRA][self::EXTRA_BASE] ?? null)
+            || !is_array($config[self::EXTRA][self::EXTRA_BASE][self::EXTRA_PREFERRED_INSTALL_CHANGED] ?? null)
         ) {
             return [];
         }
 
-        return $config['extra'][self::EXTRA_BASE][self::EXTRA_PREFERRED_INSTALL_CHANGED];
+        return $config[self::EXTRA][self::EXTRA_BASE][self::EXTRA_PREFERRED_INSTALL_CHANGED];
     }
 
     /**
@@ -118,13 +148,13 @@ final class ComposerUtils
 
         if (
             !is_array($config)
-            || !is_array($config['extra'] ?? null)
-            || !is_array($config['extra']['patches'] ?? null)
+            || !is_array($config[self::EXTRA] ?? null)
+            || !is_array($config[self::EXTRA]['patches'] ?? null)
         ) {
             return [];
         }
 
-        return $config['extra']['patches'];
+        return $config[self::EXTRA]['patches'];
     }
 
     /**
@@ -142,7 +172,7 @@ final class ComposerUtils
      */
     private function removePatchesFromConfigFile(array $patches): void
     {
-        foreach ($patches as $packageName => $packagePatches) {
+        foreach (array_keys($patches) as $packageName) {
             $this->configSource->removeProperty(sprintf('extra.patches.%s', $packageName));
         }
     }
@@ -211,7 +241,7 @@ final class ComposerUtils
             return;
         }
 
-        $currentValue = array_filter($currentValue, fn ($value) => $value !== $numericId);
+        $currentValue = array_filter($currentValue, fn ($value): bool => $value !== $numericId);
         sort($currentValue);
 
         $this->configSource->addProperty(
@@ -255,7 +285,7 @@ final class ComposerUtils
             return;
         }
 
-        $currentValue = array_filter($currentValue, fn ($value) => $value !== $packageName);
+        $currentValue = array_filter($currentValue, fn ($value): bool => $value !== $packageName);
         sort($currentValue);
 
         $this->configSource->addProperty(
@@ -319,7 +349,7 @@ final class ComposerUtils
                     $destination,
                     $includeTests
                 );
-            } catch (NoPatchException $th) {
+            } catch (NoPatchException $noPatchException) {
                 $this->io->writeError('<warning>No patches saved for this change</warning>');
 
                 continue;
@@ -368,7 +398,10 @@ final class ComposerUtils
                         $promises[] = $this->uninstallPackage($package);
 
                         // Remove package from the array
-                        $affectedPackages = array_filter($affectedPackages, fn ($value) => $value !== $packageName);
+                        $affectedPackages = array_filter(
+                            $affectedPackages,
+                            fn ($value): bool => $value !== $packageName
+                        );
                     }
                 }
 
@@ -381,10 +414,10 @@ final class ComposerUtils
                 // Show a warning for patches of missing packages
                 if ($affectedPackages !== []) {
                     $this->io->write('<warning>Patches for non-existent packages found, these are:</warning>');
-                    foreach ($affectedPackages as $packageName) {
+                    foreach ($affectedPackages as $affectedPackage) {
                         $this->io->write(sprintf(
                             '  - <info>%s</info>',
-                            $packageName
+                            $affectedPackage
                         ));
                     }
                 }
@@ -443,9 +476,6 @@ final class ComposerUtils
         $patches = $this->getPatches();
 
         if ($patches !== [] && $numericIds !== []) {
-            /** @var array<string, bool> $affectedPackages */
-            $affectedPackages = [];
-
             $this->io->write('<info>Removing patches</info>');
 
             $patchesToRemove = $patchUtils->remove($numericIds, $patches);
@@ -502,9 +532,6 @@ final class ComposerUtils
         return $patchesCount;
     }
 
-    /**
-     * @return PromiseInterface|null
-     */
     public function uninstallPackage(PackageInterface $package): ?PromiseInterface
     {
         return $this->composer->getInstallationManager()->uninstall(
@@ -514,7 +541,6 @@ final class ComposerUtils
     }
 
     /**
-     * @return void
      * @throws CommandExecutionException
      */
     public function updateLock(OutputInterface $output): void
