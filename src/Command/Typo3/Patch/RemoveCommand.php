@@ -27,7 +27,7 @@ final class RemoveCommand extends BaseCommand
     /**
      * {@inheritDoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('typo3:patch:remove')
@@ -48,7 +48,7 @@ final class RemoveCommand extends BaseCommand
      * @throws InvalidArgumentException
      * @throws UnexpectedValueException
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         // Get parameters
         if (!is_array($changeIds = $input->getArgument('change-id'))) {

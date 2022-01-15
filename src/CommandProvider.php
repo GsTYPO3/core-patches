@@ -19,8 +19,9 @@ final class CommandProvider implements CommandProviderCapability
 {
     /**
      * {@inheritDoc}
+     * @return Command\Typo3\Patch\ApplyCommand[]|Command\Typo3\Patch\RemoveCommand[]
      */
-    public function getCommands()
+    public function getCommands(): array
     {
         return [
             new Command\Typo3\Patch\ApplyCommand(),
