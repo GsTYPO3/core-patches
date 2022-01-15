@@ -23,36 +23,31 @@ final class Plugin implements PluginInterface, Capable
 {
     /**
      * {@inheritDoc}
-     *
-     * @return void
      */
-    public function activate(Composer $composer, IOInterface $io)
+    public function activate(Composer $composer, IOInterface $io): void
     {
         $composer->getConfig()->getConfigSource()->addConfigSetting('allow-plugins.cweagans/composer-patches', true);
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @return void
      */
-    public function deactivate(Composer $composer, IOInterface $io)
-    {
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @return void
-     */
-    public function uninstall(Composer $composer, IOInterface $io)
+    public function deactivate(Composer $composer, IOInterface $io): void
     {
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getCapabilities()
+    public function uninstall(Composer $composer, IOInterface $io): void
+    {
+    }
+
+    /**
+     * {@inheritDoc}
+     * @return array<class-string<ComposerCommandProvider>, class-string<CommandProvider>>
+     */
+    public function getCapabilities(): array
     {
         return [
             ComposerCommandProvider::class => CommandProvider::class,

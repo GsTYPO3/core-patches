@@ -194,6 +194,7 @@
 		],
 		"tools:php": [
 			"@tools:php:lint",
+			"@tools:php:rector",
 			"@tools:php:cs-fixer",
 			"@tools:php:copypaste",
 			"@tools:php:sniff",

@@ -38,8 +38,8 @@ return static function (ContainerConfigurator $containerConfigurator): void {
     $containerConfigurator->import(SetList::ORDER);
     $containerConfigurator->import(SetList::PRIVATIZATION);
     $containerConfigurator->import(SetList::PSR_4);
-    //$containerConfigurator->import(SetList::TYPE_DECLARATION);
-    //$containerConfigurator->import(SetList::TYPE_DECLARATION_STRICT);
+    $containerConfigurator->import(SetList::TYPE_DECLARATION);
+    $containerConfigurator->import(SetList::TYPE_DECLARATION_STRICT);
     $containerConfigurator->import(SetList::UNWRAP_COMPAT);
     //$containerConfigurator->import(SetList::EARLY_RETURN);
 

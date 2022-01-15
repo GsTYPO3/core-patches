@@ -29,7 +29,7 @@ final class ApplyCommand extends BaseCommand
     /**
      * {@inheritDoc}
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('typo3:patch:apply')
@@ -65,7 +65,7 @@ final class ApplyCommand extends BaseCommand
      *
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-id
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         // Get parameters
         if (!is_array($changeIds = $input->getArgument('change-id'))) {
