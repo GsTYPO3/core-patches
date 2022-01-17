@@ -26,6 +26,7 @@ use GsTYPO3\CorePatches\Exception\InvalidResponseException;
 use GsTYPO3\CorePatches\Exception\NoPatchException;
 use GsTYPO3\CorePatches\Exception\UnexpectedResponseException;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
+use GsTYPO3\CorePatches\Gerrit\RestApi;
 use React\Promise\PromiseInterface;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -314,7 +315,7 @@ final class ComposerUtils
      */
     public function addPatches(array $changeIds, string $destination, bool $includeTests): int
     {
-        $gerritUtils = new GerritUtils(Factory::createHttpDownloader($this->io, $this->composer->getConfig()));
+        $gerritRestApi = new RestApi(Factory::createHttpDownloader($this->io, $this->composer->getConfig()));
         $patchUtils = new PatchUtils($this->composer, $this->io);
 
         // Process change IDs
@@ -326,10 +327,10 @@ final class ComposerUtils
             $this->io->write(sprintf('<info>Creating patches for change <comment>%s</comment></info>', $changeId));
 
             try {
-                $subject = $gerritUtils->getSubject($changeId);
+                $subject = $gerritRestApi->getSubject($changeId);
                 $this->io->write(sprintf('  - Subject is <comment>%s</comment>', $subject));
 
-                $numericId = $gerritUtils->getNumericId($changeId);
+                $numericId = $gerritRestApi->getNumericId($changeId);
                 $this->io->write(sprintf('  - Numeric ID is <comment>%s</comment>', $numericId));
             } catch (UnexpectedResponseException | InvalidResponseException | UnexpectedValueException $th) {
                 $this->io->writeError('<warning>Error getting change from Gerrit</warning>');
@@ -345,7 +346,7 @@ final class ComposerUtils
                 $patches = $patchUtils->create(
                     $numericId,
                     $subject,
-                    $gerritUtils->getPatch($changeId),
+                    $gerritRestApi->getPatch($changeId),
                     $destination,
                     $includeTests
                 );
@@ -435,7 +436,7 @@ final class ComposerUtils
      */
     public function removePatches(array $changeIds): int
     {
-        $gerritUtils = new GerritUtils(Factory::createHttpDownloader($this->io, $this->composer->getConfig()));
+        $gerritRestApi = new RestApi(Factory::createHttpDownloader($this->io, $this->composer->getConfig()));
         $patchUtils = new PatchUtils($this->composer, $this->io);
 
         // Process change IDs
@@ -449,7 +450,7 @@ final class ComposerUtils
             ));
 
             try {
-                $numericId = $gerritUtils->getNumericId($changeId);
+                $numericId = $gerritRestApi->getNumericId($changeId);
                 $this->io->write(sprintf('  - Numeric ID is <comment>%s</comment>', $numericId));
             } catch (UnexpectedResponseException | InvalidResponseException | UnexpectedValueException $th) {
                 $this->io->writeError('<warning>Error getting numeric ID</warning>');
