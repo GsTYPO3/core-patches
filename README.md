@@ -21,6 +21,7 @@ dependency for production usage.
   - [Adding a change](#adding-a-change)
   - [Removing a change](#removing-a-change)
   - [Supported change ID formats](#supported-change-id-formats)
+- [Detection of merged changes on update or install](#detection-of-merged-changes-on-update-or-install)
 - [Feedback / Bug reports / Contribution](#feedback--bug-reports--contribution)
 - [License](#license)
 
@@ -95,6 +96,19 @@ next example:
 ```bash
 composer typo3:patch:apply https://review.typo3.org/c/Packages/TYPO3.CMS/+/12345
 ```
+
+## Detection of merged changes on update or install
+
+When running `composer update` or `composer install`, the plugin detects changes
+that already exist in the version being installed and suggests removing them. If
+you run Composer with the `--no-interaction` option, the patches are always
+removed.
+
+Errors may occur if you use the source-dist of packages, which can be solved by
+adding the `config.discard-changes` configuration option to your `composer.json`,
+see <https://getcomposer.org/doc/06-config.md#discard-changes>. Run e.g.
+`composer config discard-changes true` to add the configuration to your
+`composer.json`.
 
 ## Feedback / Bug reports / Contribution
 

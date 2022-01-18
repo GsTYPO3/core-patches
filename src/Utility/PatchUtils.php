@@ -32,6 +32,11 @@ final class PatchUtils
         $this->io = $io;
     }
 
+    public function patchIsPartOfChange(string $patchFileName, int $numericId): bool
+    {
+        return strpos($patchFileName, '-review-' . $numericId . '.patch') !== false;
+    }
+
     /**
      * @param int       $numericId      The numeric ID.
      * @param string    $subject        The subject of the patch.
@@ -69,7 +74,7 @@ final class PatchUtils
         foreach ($numericIds as $numericId) {
             foreach ($patches as $packageName => $packagePatches) {
                 foreach ($packagePatches as $subject => $patchFileName) {
-                    if (strpos($patchFileName, '-review-' . $numericId . '.patch') !== false) {
+                    if ($this->patchIsPartOfChange($patchFileName, $numericId)) {
                         $this->io->write(sprintf('  - Removing patch <info>%s</info>', $patchFileName));
 
                         $patchesRemoved[$packageName] = array_merge(
@@ -78,6 +83,38 @@ final class PatchUtils
                         );
 
                         unlink($patchFileName);
+                    }
+                }
+            }
+        }
+
+        return $patchesRemoved;
+    }
+
+    /**
+     * @param array<int, int>                       $numericIds The numeric IDs of the patches to remove.
+     * @param array<string, array<string, string>>  $patches    The available patches.
+     * @return array<string, array<string, string>> The removed patches.
+     */
+    public function prepareRemove(array $numericIds, array $patches): array
+    {
+        $patchesRemoved = [];
+
+        foreach ($numericIds as $numericId) {
+            foreach ($patches as $packageName => $packagePatches) {
+                foreach ($packagePatches as $subject => $patchFileName) {
+                    if ($this->patchIsPartOfChange($patchFileName, $numericId)) {
+                        $this->io->write(sprintf('  - Removing patch <info>%s</info>', $patchFileName));
+
+                        $patchesRemoved[$packageName] = array_merge(
+                            $patchesRemoved[$packageName] ?? [],
+                            [$subject => $patchFileName]
+                        );
+
+                        file_put_contents(
+                            $patchFileName,
+                            ''
+                        );
                     }
                 }
             }

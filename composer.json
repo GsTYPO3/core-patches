@@ -117,8 +117,10 @@
 		"ci:tests:functional": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-functional.xml --testsuite \"Functional Test Suite\"'",
 		"ci:tests:smoke": [
 			"@composer test:typo3:patch:apply",
+			"@composer test:typo3:patch:update",
 			"@composer test:typo3:patch:remove",
 			"@composer test:typo3:patch:apply-with-tests",
+			"@composer test:typo3:patch:update",
 			"@composer test:typo3:patch:remove"
 		],
 		"ci:tests:unit": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Unit Test Suite\"'",
@@ -149,12 +151,12 @@
 		],
 		"test:typo3:patch:apply": [
 			"@test:typo3:patch:setup",
-			".build/project/vendor/bin/composer typo3:patch:apply 73021 -d.build/project --ansi",
+			".build/project/vendor/bin/composer typo3:patch:apply 72954 73021 -d.build/project --ansi --no-interaction",
 			".build/project/vendor/bin/composer validate -d.build/project --ansi"
 		],
 		"test:typo3:patch:apply-with-tests": [
 			"@test:typo3:patch:setup",
-			".build/project/vendor/bin/composer typo3:patch:apply 73021 -d.build/project --ansi -t",
+			".build/project/vendor/bin/composer typo3:patch:apply 72954 73021 -d.build/project --ansi --no-interaction -t",
 			".build/project/vendor/bin/composer validate -d.build/project --ansi"
 		],
 		"test:typo3:patch:normalize": [
@@ -163,7 +165,7 @@
 		],
 		"test:typo3:patch:remove": [
 			"test -f .build/project/composer.lock",
-			".build/project/vendor/bin/composer typo3:patch:remove 73021 -d.build/project --ansi",
+			".build/project/vendor/bin/composer typo3:patch:remove 73021 -d.build/project --ansi --no-interaction",
 			".build/project/vendor/bin/composer validate -d.build/project --ansi"
 		],
 		"test:typo3:patch:setup": [
@@ -171,7 +173,11 @@
 			"mkdir -p .build/project",
 			"cp tests/project/composer.json .build/project/composer.json",
 			"@composer install -d.build/project --ansi",
-			".build/project/vendor/bin/composer update -d.build/project --ansi"
+			".build/project/vendor/bin/composer update -d.build/project --ansi --no-interaction"
+		],
+		"test:typo3:patch:update": [
+			".build/project/vendor/bin/composer require 'typo3/cms-core:^10.4 || ^11.5' -d.build/project --ansi --no-interaction",
+			".build/project/vendor/bin/composer update -d.build/project --ansi --no-interaction"
 		],
 		"tools": [
 			"@tools:static"
