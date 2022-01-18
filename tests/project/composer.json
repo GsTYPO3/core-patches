@@ -15,6 +15,7 @@
 	"require": {
 		"php": "^7.4 || ^8.0",
 		"gilbertsoft/typo3-core-patches": "0.1-dev",
+		"typo3/cms-core": "10.4.22 || 11.5.4",
 		"typo3/minimal": "^10.4 || ^11.5"
 	},
 	"require-dev": {
@@ -38,6 +39,7 @@
 			"typo3/cms-composer-installers": true,
 			"ergebnis/composer-normalize": true,
 			"gilbertsoft/typo3-core-patches": true
-		}
+		},
+		"discard-changes": true
 	}
 }

@@ -14,18 +14,36 @@ declare(strict_types=1);
 namespace GsTYPO3\CorePatches;
 
 use Composer\Composer;
+use Composer\DependencyResolver\Operation\InstallOperation;
+use Composer\DependencyResolver\Operation\UpdateOperation;
+use Composer\DependencyResolver\Transaction;
+use Composer\EventDispatcher\EventSubscriberInterface;
+use Composer\Installer\InstallerEvent;
+use Composer\Installer\InstallerEvents;
 use Composer\IO\IOInterface;
 use Composer\Plugin\Capability\CommandProvider as ComposerCommandProvider;
 use Composer\Plugin\Capable;
 use Composer\Plugin\PluginInterface;
+use Composer\Script\Event;
+use Composer\Script\ScriptEvents;
+use GsTYPO3\CorePatches\Utility\ComposerUtils;
 
-final class Plugin implements PluginInterface, Capable
+final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
 {
+    private ComposerUtils $composerUtils;
+
+    /**
+     * @var array<int, string>
+     */
+    private array $patchesToRemove = [];
+
     /**
      * {@inheritDoc}
      */
     public function activate(Composer $composer, IOInterface $io): void
     {
+        $this->composerUtils = new ComposerUtils($composer, $io);
+
         $composer->getConfig()->getConfigSource()->addConfigSetting('allow-plugins.cweagans/composer-patches', true);
     }
 
@@ -45,6 +63,7 @@ final class Plugin implements PluginInterface, Capable
 
     /**
      * {@inheritDoc}
+     *
      * @return array<class-string<ComposerCommandProvider>, class-string<CommandProvider>>
      */
     public function getCapabilities(): array
@@ -52,5 +71,57 @@ final class Plugin implements PluginInterface, Capable
         return [
             ComposerCommandProvider::class => CommandProvider::class,
         ];
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return array<string, array<array{0: string, 1?: int}|int|string>|string>
+     */
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            InstallerEvents::PRE_OPERATIONS_EXEC => ['checkForObsoletePatches', 50],
+            ScriptEvents::POST_INSTALL_CMD => ['removeOfObsoletePatches', 50],
+            ScriptEvents::POST_UPDATE_CMD => ['removeOfObsoletePatches', 50],
+        ];
+    }
+
+    /**
+     * Check for obsolete patches before they get applied.
+     */
+    public function checkForObsoletePatches(InstallerEvent $installerEvent): void
+    {
+        if (!$installerEvent->getTransaction() instanceof Transaction) {
+            return;
+        }
+
+        $installerEvent->getIO()->write('<info>Checking for obsolete patches, this may take a while...</info>');
+
+        foreach ($installerEvent->getTransaction()->getOperations() as $operation) {
+            if ($operation instanceof InstallOperation) {
+                $this->patchesToRemove = [
+                    ...$this->patchesToRemove,
+                    ...$this->composerUtils->verifyPatchesForPackage($operation->getPackage()),
+                ];
+            } elseif ($operation instanceof UpdateOperation) {
+                $this->patchesToRemove = [
+                    ...$this->patchesToRemove,
+                    ...$this->composerUtils->verifyPatchesForPackage($operation->getTargetPackage()),
+                ];
+            }
+        }
+    }
+
+    /**
+     * Check for obsolete patches before they get applied.
+     */
+    public function removeOfObsoletePatches(Event $event): void
+    {
+        if ($this->patchesToRemove !== []) {
+            $event->getIO()->write('<info>Removing patches marked for removal...</info>');
+            $this->composerUtils->removePatches($this->patchesToRemove, true);
+            $event->getIO()->write('<info>Patches successfully removed.</info>');
+        }
     }
 }

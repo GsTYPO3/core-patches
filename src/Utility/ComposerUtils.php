@@ -21,6 +21,7 @@ use Composer\Factory;
 use Composer\IO\IOInterface;
 use Composer\Json\JsonFile;
 use Composer\Package\PackageInterface;
+use Composer\Semver\Semver;
 use GsTYPO3\CorePatches\Exception\CommandExecutionException;
 use GsTYPO3\CorePatches\Exception\InvalidResponseException;
 use GsTYPO3\CorePatches\Exception\NoPatchException;
@@ -67,11 +68,15 @@ final class ComposerUtils
 
     private IOInterface $io;
 
-    private Application $application;
-
     private JsonFile $configFile;
 
     private JsonConfigSource $configSource;
+
+    private Application $application;
+
+    private RestApi $gerritRestApi;
+
+    private PatchUtils $patchUtils;
 
     public function __construct(Composer $composer, IOInterface $io)
     {
@@ -82,6 +87,9 @@ final class ComposerUtils
         $this->configSource = new JsonConfigSource($this->configFile);
         $this->application = new Application();
         $this->application->setAutoExit(false);
+
+        $this->gerritRestApi = new RestApi(Factory::createHttpDownloader($this->io, $this->composer->getConfig()));
+        $this->patchUtils = new PatchUtils($this->composer, $this->io);
     }
 
     /**
@@ -185,6 +193,24 @@ final class ComposerUtils
     }
 
     /**
+     * @return array<string, array<string, string>>
+     */
+    private function getPatches(): array
+    {
+        $config = $this->configFile->read();
+
+        if (
+            !is_array($config)
+            || !is_array($config[self::EXTRA] ?? null)
+            || !is_array($config[self::EXTRA]['patches'] ?? null)
+        ) {
+            return [];
+        }
+
+        return $config[self::EXTRA]['patches'];
+    }
+
+    /**
      * @param array<string, array<string, string>> $patches
      */
     private function addPatchesToConfigFile(array $patches): void
@@ -233,22 +259,12 @@ final class ComposerUtils
         $this->addPreferredInstallChanged($packageName);
     }
 
-    /**
-     * @return array<string, array<string, string>>
-     */
-    private function getPatches(): array
+    private function uninstallPackage(PackageInterface $package): ?PromiseInterface
     {
-        $config = $this->configFile->read();
-
-        if (
-            !is_array($config)
-            || !is_array($config[self::EXTRA] ?? null)
-            || !is_array($config[self::EXTRA]['patches'] ?? null)
-        ) {
-            return [];
-        }
-
-        return $config[self::EXTRA]['patches'];
+        return $this->composer->getInstallationManager()->uninstall(
+            $this->composer->getRepositoryManager()->getLocalRepository(),
+            new UninstallOperation($package)
+        );
     }
 
     /**
@@ -300,6 +316,38 @@ final class ComposerUtils
     }
 
     /**
+     * @return array<int, string>
+     */
+    private function getPackagesForChange(int $changeId): array
+    {
+        $changePackages = [];
+
+        $patches = $this->getPatches();
+
+        foreach ($patches as $packageName => $packagePatches) {
+            foreach ($packagePatches as $packagePatch) {
+                if ($this->patchUtils->patchIsPartOfChange($packagePatch, $changeId)) {
+                    $changePackages[] = $packageName;
+                }
+            }
+        }
+
+        return $changePackages;
+    }
+
+    private function askRemoval(int $changeId): bool
+    {
+        return $this->io->askConfirmation(
+            sprintf(
+                '<info>The change %d appears to be present in the version being installed or updated.' .
+                ' Should the patch for this change be removed?</info> [<comment>Y,n</comment>] ',
+                $changeId
+            ),
+            true
+        );
+    }
+
+    /**
      * @throws CommandExecutionException
      */
     private function checkCommandResult(int $resultCode, int $expectedCode, string $errorMessage): void
@@ -315,9 +363,6 @@ final class ComposerUtils
      */
     public function addPatches(array $changeIds, string $destination, bool $includeTests): int
     {
-        $gerritRestApi = new RestApi(Factory::createHttpDownloader($this->io, $this->composer->getConfig()));
-        $patchUtils = new PatchUtils($this->composer, $this->io);
-
         // Process change IDs
         $patches = [];
         $patchesCount = 0;
@@ -327,10 +372,10 @@ final class ComposerUtils
             $this->io->write(sprintf('<info>Creating patches for change <comment>%s</comment></info>', $changeId));
 
             try {
-                $subject = $gerritRestApi->getSubject($changeId);
+                $subject = $this->gerritRestApi->getSubject($changeId);
                 $this->io->write(sprintf('  - Subject is <comment>%s</comment>', $subject));
 
-                $numericId = $gerritRestApi->getNumericId($changeId);
+                $numericId = $this->gerritRestApi->getNumericId($changeId);
                 $this->io->write(sprintf('  - Numeric ID is <comment>%s</comment>', $numericId));
             } catch (UnexpectedResponseException | InvalidResponseException | UnexpectedValueException $th) {
                 $this->io->writeError('<warning>Error getting change from Gerrit</warning>');
@@ -343,10 +388,10 @@ final class ComposerUtils
             }
 
             try {
-                $patches = $patchUtils->create(
+                $patches = $this->patchUtils->create(
                     $numericId,
                     $subject,
-                    $gerritRestApi->getPatch($changeId),
+                    $this->gerritRestApi->getPatch($changeId),
                     $destination,
                     $includeTests
                 );
@@ -434,11 +479,8 @@ final class ComposerUtils
      * @param array<int, string>   $changeIds
      * @return int The number of patches removed
      */
-    public function removePatches(array $changeIds): int
+    public function removePatches(array $changeIds, bool $skipUnistall = false): int
     {
-        $gerritRestApi = new RestApi(Factory::createHttpDownloader($this->io, $this->composer->getConfig()));
-        $patchUtils = new PatchUtils($this->composer, $this->io);
-
         // Process change IDs
         $appliedChanges = $this->getAppliedChanges();
         $numericIds = [];
@@ -450,7 +492,7 @@ final class ComposerUtils
             ));
 
             try {
-                $numericId = $gerritRestApi->getNumericId($changeId);
+                $numericId = $this->gerritRestApi->getNumericId($changeId);
                 $this->io->write(sprintf('  - Numeric ID is <comment>%s</comment>', $numericId));
             } catch (UnexpectedResponseException | InvalidResponseException | UnexpectedValueException $th) {
                 $this->io->writeError('<warning>Error getting numeric ID</warning>');
@@ -479,7 +521,7 @@ final class ComposerUtils
         if ($patches !== [] && $numericIds !== []) {
             $this->io->write('<info>Removing patches</info>');
 
-            $patchesToRemove = $patchUtils->remove($numericIds, $patches);
+            $patchesToRemove = $this->patchUtils->remove($numericIds, $patches);
 
             $this->io->write('  - Removing patches from <info>composer.json</info>');
             $this->removePatchesFromConfigFile($patchesToRemove);
@@ -500,25 +542,27 @@ final class ComposerUtils
                     $patchesCount += count($packagePatches);
                 }
 
-                // Uninstall packages with removed patches
-                $packages = $this->composer->getRepositoryManager()->getLocalRepository()->getPackages();
-                $promises = [];
+                if (!$skipUnistall) {
+                    // Uninstall packages with removed patches
+                    $packages = $this->composer->getRepositoryManager()->getLocalRepository()->getPackages();
+                    $promises = [];
 
-                foreach ($packages as $package) {
-                    $packageName = $package->getName();
-                    if (isset($patchesToRemove[$packageName])) {
-                        $this->io->write(sprintf(
-                            '<info>Removing package %s so that it can be reinstalled without the removed patch.</info>',
-                            $packageName
-                        ));
-                        $promises[] = $this->uninstallPackage($package);
+                    foreach ($packages as $package) {
+                        $packageName = $package->getName();
+                        if (isset($patchesToRemove[$packageName])) {
+                            $this->io->write(sprintf(
+                                '<info>Removing package %s so that it can be reinstalled without the patch.</info>',
+                                $packageName
+                            ));
+                            $promises[] = $this->uninstallPackage($package);
+                        }
                     }
-                }
 
-                // Let Composer remove the packages marked for uninstall
-                $promises = array_filter($promises);
-                if ($promises !== []) {
-                    $this->composer->getLoop()->wait($promises);
+                    // Let Composer remove the packages marked for uninstall
+                    $promises = array_filter($promises);
+                    if ($promises !== []) {
+                        $this->composer->getLoop()->wait($promises);
+                    }
                 }
             }
 
@@ -533,12 +577,46 @@ final class ComposerUtils
         return $patchesCount;
     }
 
-    public function uninstallPackage(PackageInterface $package): ?PromiseInterface
+    /**
+     * @return array<int, string>
+     */
+    public function verifyPatchesForPackage(PackageInterface $package): array
     {
-        return $this->composer->getInstallationManager()->uninstall(
-            $this->composer->getRepositoryManager()->getLocalRepository(),
-            new UninstallOperation($package)
-        );
+        $obsoleteChanges = [];
+        $appliedChanges = $this->getAppliedChanges();
+        $patches = $this->getPatches();
+
+        foreach ($appliedChanges as $appliedChange) {
+            $packages = $this->getPackagesForChange($appliedChange);
+
+            if (in_array($package->getName(), $packages, true)) {
+                $includedInInfo = $this->gerritRestApi->getIncludedIn((string)$appliedChange);
+
+                foreach ($includedInInfo->tags as $tag) {
+                    if (Semver::satisfies($package->getVersion(), $tag)) {
+                        if ($this->askRemoval($appliedChange)) {
+                            $obsoleteChanges[] = (string)$appliedChange;
+                            $this->patchUtils->prepareRemove([$appliedChange], $patches);
+                        }
+
+                        continue 2;
+                    }
+                }
+
+                foreach ($includedInInfo->branches as $branch) {
+                    if (Semver::satisfies($package->getVersion(), $branch)) {
+                        if ($this->askRemoval($appliedChange)) {
+                            $obsoleteChanges[] = (string)$appliedChange;
+                            $this->patchUtils->prepareRemove([$appliedChange], $patches);
+                        }
+
+                        continue 2;
+                    }
+                }
+            }
+        }
+
+        return $obsoleteChanges;
     }
 
     /**
