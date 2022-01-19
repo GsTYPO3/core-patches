@@ -41,7 +41,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
     $containerConfigurator->import(SetList::TYPE_DECLARATION);
     $containerConfigurator->import(SetList::TYPE_DECLARATION_STRICT);
     $containerConfigurator->import(SetList::UNWRAP_COMPAT);
-    //$containerConfigurator->import(SetList::EARLY_RETURN);
+    $containerConfigurator->import(SetList::EARLY_RETURN);
 
     // get services (needed for register a single rule)
     // $services = $containerConfigurator->services();

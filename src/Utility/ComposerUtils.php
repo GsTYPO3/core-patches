@@ -99,6 +99,7 @@ final class ComposerUtils
     {
         $config = $this->configFile->read();
 
+        /** @noRector \Rector\EarlyReturn\Rector */
         if (
             !is_array($config)
             || !is_array($config[self::EXTRA] ?? null)
@@ -118,6 +119,7 @@ final class ComposerUtils
     {
         $config = $this->configFile->read();
 
+        /** @noRector \Rector\EarlyReturn\Rector */
         if (
             !is_array($config)
             || !is_array($config[self::EXTRA] ?? null)
@@ -137,6 +139,7 @@ final class ComposerUtils
     {
         $config = $this->configFile->read();
 
+        /** @noRector \Rector\EarlyReturn\Rector */
         if (
             !is_array($config)
             || !is_array($config[self::CONFIG] ?? null)
@@ -199,6 +202,7 @@ final class ComposerUtils
     {
         $config = $this->configFile->read();
 
+        /** @noRector \Rector\EarlyReturn\Rector */
         if (
             !is_array($config)
             || !is_array($config[self::EXTRA] ?? null)
