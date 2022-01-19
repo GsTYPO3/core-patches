@@ -22,6 +22,7 @@ composer_version: "2"
 web_environment:
 - COMPOSER_ALLOW_XDEBUG=1
 - COMPOSER_DEBUG_EVENTS=0
+- XDEBUG_MODE=debug,develop,coverage
 
 # Key features of ddev's config.yaml:
 

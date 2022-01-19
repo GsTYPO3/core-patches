@@ -13,3 +13,4 @@
 /.php-cs-fixer.cache
 /.phplint-cache
 /composer.lock
+.phpunit.result.cache

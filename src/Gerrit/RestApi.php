@@ -115,12 +115,16 @@ final class RestApi
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-id
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#get-patch
      */
-    public function getPatch(string $changeId): string
+    public function getPatch(string $changeId, int $revisionId = -1): string
     {
         $changeId = $this->extractChangeId($changeId);
 
+        if ($revisionId === -1) {
+            $revisionId = 'current';
+        }
+
         $patch = base64_decode(
-            $this->get(sprintf(self::REST_API . '/changes/%s/revisions/current/patch', $changeId), true),
+            $this->get(sprintf(self::REST_API . '/changes/%s/revisions/%s/patch', $changeId, $revisionId), true),
             true
         );
 

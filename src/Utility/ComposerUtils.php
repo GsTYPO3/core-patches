@@ -22,6 +22,9 @@ use Composer\IO\IOInterface;
 use Composer\Json\JsonFile;
 use Composer\Package\PackageInterface;
 use Composer\Semver\Semver;
+use GsTYPO3\CorePatches\Config;
+use GsTYPO3\CorePatches\Config\Change;
+use GsTYPO3\CorePatches\Config\Packages;
 use GsTYPO3\CorePatches\Exception\CommandExecutionException;
 use GsTYPO3\CorePatches\Exception\InvalidResponseException;
 use GsTYPO3\CorePatches\Exception\NoPatchException;
@@ -49,24 +52,11 @@ final class ComposerUtils
      */
     private const EXTRA = 'extra';
 
-    /**
-     * @var string
-     */
-    private const EXTRA_BASE = 'gilbertsoft/typo3-core-patches';
-
-    /**
-     * @var string
-     */
-    private const EXTRA_APPLIED_CHANGES = 'applied-changes';
-
-    /**
-     * @var string
-     */
-    private const EXTRA_PREFERRED_INSTALL_CHANGED = 'preferred-install-changed';
-
     private Composer $composer;
 
     private IOInterface $io;
+
+    private Config $config;
 
     private JsonFile $configFile;
 
@@ -83,6 +73,7 @@ final class ComposerUtils
         $this->composer = $composer;
         $this->io = $io;
 
+        $this->config = new Config();
         $this->configFile = new JsonFile(Factory::getComposerFile(), null, $this->io);
         $this->configSource = new JsonConfigSource($this->configFile);
         $this->application = new Application();
@@ -90,46 +81,6 @@ final class ComposerUtils
 
         $this->gerritRestApi = new RestApi(Factory::createHttpDownloader($this->io, $this->composer->getConfig()));
         $this->patchUtils = new PatchUtils($this->composer, $this->io);
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function getPreferredInstallChanged(): array
-    {
-        $config = $this->configFile->read();
-
-        /** @noRector \Rector\EarlyReturn\Rector */
-        if (
-            !is_array($config)
-            || !is_array($config[self::EXTRA] ?? null)
-            || !is_array($config[self::EXTRA][self::EXTRA_BASE] ?? null)
-            || !is_array($config[self::EXTRA][self::EXTRA_BASE][self::EXTRA_PREFERRED_INSTALL_CHANGED] ?? null)
-        ) {
-            return [];
-        }
-
-        return $config[self::EXTRA][self::EXTRA_BASE][self::EXTRA_PREFERRED_INSTALL_CHANGED];
-    }
-
-    /**
-     * @return array<int, int>
-     */
-    private function getAppliedChanges(): array
-    {
-        $config = $this->configFile->read();
-
-        /** @noRector \Rector\EarlyReturn\Rector */
-        if (
-            !is_array($config)
-            || !is_array($config[self::EXTRA] ?? null)
-            || !is_array($config[self::EXTRA][self::EXTRA_BASE] ?? null)
-            || !is_array($config[self::EXTRA][self::EXTRA_BASE][self::EXTRA_APPLIED_CHANGES] ?? null)
-        ) {
-            return [];
-        }
-
-        return $config[self::EXTRA][self::EXTRA_BASE][self::EXTRA_APPLIED_CHANGES];
     }
 
     /**
@@ -153,46 +104,28 @@ final class ComposerUtils
 
     private function addPreferredInstallChanged(string $packageName): void
     {
-        $currentValue = $this->getPreferredInstallChanged();
+        $preferredInstallChanged = $this->config->load($this->configFile)->getPreferredInstallChanged();
 
-        if (in_array($packageName, $currentValue, true)) {
+        if ($preferredInstallChanged->has($packageName)) {
             // the package is already listed, skip addition
             return;
         }
 
-        $currentValue[] = $packageName;
-        sort($currentValue);
-
-        $this->configSource->addProperty(
-            sprintf(
-                'extra.%s.%s',
-                self::EXTRA_BASE,
-                self::EXTRA_PREFERRED_INSTALL_CHANGED
-            ),
-            $currentValue
-        );
+        $preferredInstallChanged->add($packageName);
+        $this->config->save($this->configSource);
     }
 
     private function removePreferredInstallChanged(string $packageName): void
     {
-        $currentValue = $this->getPreferredInstallChanged();
+        $preferredInstallChanged = $this->config->load($this->configFile)->getPreferredInstallChanged();
 
-        if (!in_array($packageName, $currentValue, true)) {
+        if (!$preferredInstallChanged->has($packageName)) {
             // the package is not listed, skip removal
             return;
         }
 
-        $currentValue = array_filter($currentValue, fn ($value): bool => $value !== $packageName);
-        sort($currentValue);
-
-        $this->configSource->addProperty(
-            sprintf(
-                'extra.%s.%s',
-                self::EXTRA_BASE,
-                self::EXTRA_PREFERRED_INSTALL_CHANGED
-            ),
-            $currentValue
-        );
+        $preferredInstallChanged->remove($packageName);
+        $this->config->save($this->configSource);
     }
 
     /**
@@ -224,26 +157,21 @@ final class ComposerUtils
         }
     }
 
-    private function addAppliedChange(int $numericId): void
+    /**
+     * @param array<int, string> $packages
+     */
+    private function addAppliedChange(int $numericId, array $packages, bool $includeTests, int $revision = -1): void
     {
-        $currentValue = $this->getAppliedChanges();
+        $changes = $this->config->load($this->configFile)->getChanges();
 
-        if (in_array($numericId, $currentValue, true)) {
+        if ($changes->has($numericId)) {
             // the package is already listed, skip addition
             return;
         }
 
-        $currentValue[] = $numericId;
-        sort($currentValue);
+        $changes->add($numericId, $revision, $packages, $includeTests);
 
-        $this->configSource->addProperty(
-            sprintf(
-                'extra.%s.%s',
-                self::EXTRA_BASE,
-                self::EXTRA_APPLIED_CHANGES
-            ),
-            $currentValue
-        );
+        $this->config->save($this->configSource);
     }
 
     private function setSourceInstall(string $packageName): void
@@ -283,9 +211,9 @@ final class ComposerUtils
 
     private function unsetSourceInstall(string $packageName): void
     {
-        $currentValue = $this->getPreferredInstallChanged();
+        $preferredInstallChanged = $this->config->load($this->configFile)->getPreferredInstallChanged();
 
-        if (!in_array($packageName, $currentValue, true)) {
+        if (!$preferredInstallChanged->has($packageName)) {
             // source was not set by this package, skip removal
             return;
         }
@@ -299,24 +227,16 @@ final class ComposerUtils
 
     private function removeAppliedChange(int $numericId): void
     {
-        $currentValue = $this->getAppliedChanges();
+        $changes = $this->config->load($this->configFile)->getChanges();
 
-        if (!in_array($numericId, $currentValue, true)) {
+        if (!$changes->has($numericId)) {
             // the package is not listed, skip removal
             return;
         }
 
-        $currentValue = array_filter($currentValue, fn ($value): bool => $value !== $numericId);
-        sort($currentValue);
+        $changes->remove($numericId);
 
-        $this->configSource->addProperty(
-            sprintf(
-                'extra.%s.%s',
-                self::EXTRA_BASE,
-                self::EXTRA_APPLIED_CHANGES
-            ),
-            $currentValue
-        );
+        $this->config->save($this->configSource);
     }
 
     /**
@@ -416,7 +336,7 @@ final class ComposerUtils
             // Adding patches to configuration
             $this->io->write('  - Adding patches to <info>composer.json</info>');
             $this->addPatchesToConfigFile($patches);
-            $this->addAppliedChange($numericId);
+            $this->addAppliedChange($numericId, array_keys($patches), $includeTests);
 
             $affectedPackages = [...$affectedPackages, ...array_keys($patches)];
 
@@ -486,7 +406,7 @@ final class ComposerUtils
     public function removePatches(array $changeIds, bool $skipUnistall = false): int
     {
         // Process change IDs
-        $appliedChanges = $this->getAppliedChanges();
+        $appliedChanges = $this->config->load($this->configFile)->getChanges();
         $numericIds = [];
 
         foreach ($changeIds as $changeId) {
@@ -509,7 +429,7 @@ final class ComposerUtils
             }
 
             // Check if change was previously added by this plugin or skip
-            if (!in_array($numericId, $appliedChanges, true)) {
+            if (!$appliedChanges->has($numericId)) {
                 $this->io->writeError('<warning>Change was not applied by this plugin, skipping</warning>');
 
                 continue;
@@ -587,20 +507,20 @@ final class ComposerUtils
     public function verifyPatchesForPackage(PackageInterface $package): array
     {
         $obsoleteChanges = [];
-        $appliedChanges = $this->getAppliedChanges();
+        $appliedChanges = $this->config->load($this->configFile)->getChanges();
         $patches = $this->getPatches();
 
         foreach ($appliedChanges as $appliedChange) {
-            $packages = $this->getPackagesForChange($appliedChange);
+            $packages = $this->getPackagesForChange($appliedChange->getNumber());
 
             if (in_array($package->getName(), $packages, true)) {
-                $includedInInfo = $this->gerritRestApi->getIncludedIn((string)$appliedChange);
+                $includedInInfo = $this->gerritRestApi->getIncludedIn((string)$appliedChange->getNumber());
 
                 foreach ($includedInInfo->tags as $tag) {
                     if (Semver::satisfies($package->getVersion(), $tag)) {
-                        if ($this->askRemoval($appliedChange)) {
-                            $obsoleteChanges[] = (string)$appliedChange;
-                            $this->patchUtils->prepareRemove([$appliedChange], $patches);
+                        if ($this->askRemoval($appliedChange->getNumber())) {
+                            $obsoleteChanges[] = (string)$appliedChange->getNumber();
+                            $this->patchUtils->prepareRemove([$appliedChange->getNumber()], $patches);
                         }
 
                         continue 2;
@@ -609,9 +529,9 @@ final class ComposerUtils
 
                 foreach ($includedInInfo->branches as $branch) {
                     if (Semver::satisfies($package->getVersion(), $branch)) {
-                        if ($this->askRemoval($appliedChange)) {
-                            $obsoleteChanges[] = (string)$appliedChange;
-                            $this->patchUtils->prepareRemove([$appliedChange], $patches);
+                        if ($this->askRemoval($appliedChange->getNumber())) {
+                            $obsoleteChanges[] = (string)$appliedChange->getNumber();
+                            $this->patchUtils->prepareRemove([$appliedChange->getNumber()], $patches);
                         }
 
                         continue 2;

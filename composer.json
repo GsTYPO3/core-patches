@@ -33,7 +33,7 @@
 	"require-dev": {
 		"bamarni/composer-bin-plugin": "^1.4",
 		"composer/composer": "^2.0.9",
-		"ergebnis/composer-normalize": "*"
+		"ergebnis/composer-normalize": ">=2.23.0"
 	},
 	"autoload": {
 		"psr-4": {
@@ -123,7 +123,7 @@
 			"@composer test:typo3:patch:update",
 			"@composer test:typo3:patch:remove"
 		],
-		"ci:tests:unit": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Unit Test Suite\"'",
+		"ci:tests:unit": "@php phpunit -c tests/Unit/phpunit.xml",
 		"ci:yaml:lint": "yaml-lint .ddev .github",
 		"clean": [
 			"@tools:setup:clean",
@@ -233,7 +233,7 @@
 			"@composer test:typo3:patch:apply-with-tests",
 			"@composer test:typo3:patch:remove"
 		],
-		"tools:tests:unit": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-unit.xml --testsuite \"Unit Test Suite\"'",
+		"tools:tests:unit": "@php phpunit -c tests/Unit/phpunit.xml",
 		"tools:yaml:lint": "yaml-lint .ddev .github"
 	}
 }
