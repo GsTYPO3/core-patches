@@ -84,6 +84,38 @@ final class ComposerUtils
     }
 
     /**
+     * @param array<string, array<string, string>> $patches
+     */
+    private function addPatchesToConfigFile(array $patches): void
+    {
+        foreach ($patches as $packageName => $packagePatches) {
+            $this->configSource->addProperty(sprintf('extra.patches.%s', $packageName), $packagePatches);
+        }
+    }
+
+    /**
+     * @param array<int, string> $packages
+     */
+    private function addAppliedChange(
+        int $numericId,
+        array $packages,
+        bool $includeTests = false,
+        string $destination = '',
+        int $revision = -1
+    ): void {
+        $changes = $this->config->load($this->configFile)->getChanges();
+
+        if ($changes->has($numericId)) {
+            // the package is already listed, skip addition
+            return;
+        }
+
+        $changes->add($numericId, $packages, $includeTests, $destination, $revision);
+
+        $this->config->save($this->configSource);
+    }
+
+    /**
      * @return array<string, string>
      */
     private function getPreferredInstall(): array
@@ -148,30 +180,70 @@ final class ComposerUtils
     }
 
     /**
-     * @param array<string, array<string, string>> $patches
+     * @param array<int, string> $changeIds
+     * @param array<int, string> $affectedPackages
      */
-    private function addPatchesToConfigFile(array $patches): void
-    {
-        foreach ($patches as $packageName => $packagePatches) {
-            $this->configSource->addProperty(sprintf('extra.patches.%s', $packageName), $packagePatches);
+    private function createPatches(
+        array $changeIds,
+        string $destination,
+        bool $includeTests,
+        array &$affectedPackages
+    ): int {
+        // Process change IDs
+        $patchesCount = 0;
+
+        foreach ($changeIds as $changeId) {
+            $this->io->write(sprintf('<info>Creating patches for change <comment>%s</comment></info>', $changeId));
+
+            try {
+                $subject = $this->gerritRestApi->getSubject($changeId);
+                $this->io->write(sprintf('  - Subject is <comment>%s</comment>', $subject));
+
+                $numericId = $this->gerritRestApi->getNumericId($changeId);
+                $this->io->write(sprintf('  - Numeric ID is <comment>%s</comment>', $numericId));
+            } catch (UnexpectedResponseException | InvalidResponseException | UnexpectedValueException $th) {
+                $this->io->writeError('<warning>Error getting change from Gerrit</warning>');
+                $this->io->writeError(sprintf(
+                    '<warning>%s</warning>',
+                    $th->getMessage()
+                ), true, IOInterface::VERBOSE);
+
+                continue;
+            }
+
+            try {
+                $patches = $this->patchUtils->create(
+                    $numericId,
+                    $subject,
+                    $this->gerritRestApi->getPatch($changeId),
+                    $destination,
+                    $includeTests
+                );
+            } catch (NoPatchException $noPatchException) {
+                $this->io->writeError('<warning>No patches saved for this change</warning>');
+
+                continue;
+            }
+
+            $patchesCreated = count($patches);
+
+            $this->io->write(sprintf(
+                '  - Change saved to <comment>%d</comment> patch%s',
+                $patchesCreated,
+                $patchesCreated === 1 ? '' : 'es'
+            ));
+
+            // Adding patches to configuration
+            $this->io->write('  - Adding patches to <info>composer.json</info>');
+            $this->addPatchesToConfigFile($patches);
+            $this->addAppliedChange($numericId, array_keys($patches), $includeTests, $destination);
+
+            $affectedPackages = [...$affectedPackages, ...array_keys($patches)];
+
+            $patchesCount += $patchesCreated;
         }
-    }
 
-    /**
-     * @param array<int, string> $packages
-     */
-    private function addAppliedChange(int $numericId, array $packages, bool $includeTests, int $revision = -1): void
-    {
-        $changes = $this->config->load($this->configFile)->getChanges();
-
-        if ($changes->has($numericId)) {
-            // the package is already listed, skip addition
-            return;
-        }
-
-        $changes->add($numericId, $revision, $packages, $includeTests);
-
-        $this->config->save($this->configSource);
+        return $patchesCount;
     }
 
     private function setSourceInstall(string $packageName): void
@@ -287,61 +359,8 @@ final class ComposerUtils
      */
     public function addPatches(array $changeIds, string $destination, bool $includeTests): int
     {
-        // Process change IDs
-        $patches = [];
-        $patchesCount = 0;
         $affectedPackages = [];
-
-        foreach ($changeIds as $changeId) {
-            $this->io->write(sprintf('<info>Creating patches for change <comment>%s</comment></info>', $changeId));
-
-            try {
-                $subject = $this->gerritRestApi->getSubject($changeId);
-                $this->io->write(sprintf('  - Subject is <comment>%s</comment>', $subject));
-
-                $numericId = $this->gerritRestApi->getNumericId($changeId);
-                $this->io->write(sprintf('  - Numeric ID is <comment>%s</comment>', $numericId));
-            } catch (UnexpectedResponseException | InvalidResponseException | UnexpectedValueException $th) {
-                $this->io->writeError('<warning>Error getting change from Gerrit</warning>');
-                $this->io->writeError(sprintf(
-                    '<warning>%s</warning>',
-                    $th->getMessage()
-                ), true, IOInterface::VERBOSE);
-
-                continue;
-            }
-
-            try {
-                $patches = $this->patchUtils->create(
-                    $numericId,
-                    $subject,
-                    $this->gerritRestApi->getPatch($changeId),
-                    $destination,
-                    $includeTests
-                );
-            } catch (NoPatchException $noPatchException) {
-                $this->io->writeError('<warning>No patches saved for this change</warning>');
-
-                continue;
-            }
-
-            $patchesCreated = count($patches);
-
-            $this->io->write(sprintf(
-                '  - Change saved to <comment>%d</comment> patch%s',
-                $patchesCreated,
-                $patchesCreated === 1 ? '' : 'es'
-            ));
-
-            // Adding patches to configuration
-            $this->io->write('  - Adding patches to <info>composer.json</info>');
-            $this->addPatchesToConfigFile($patches);
-            $this->addAppliedChange($numericId, array_keys($patches), $includeTests);
-
-            $affectedPackages = [...$affectedPackages, ...array_keys($patches)];
-
-            $patchesCount += $patchesCreated;
-        }
+        $patchesCount = $this->createPatches($changeIds, $destination, $includeTests, $affectedPackages);
 
         if ($patchesCount > 0) {
             // Reconfigure preferred-install for packages if changes of tests are patched too
@@ -496,6 +515,31 @@ final class ComposerUtils
             }
         } else {
             $this->io->write('<warning>No patches removed</warning>');
+        }
+
+        return $patchesCount;
+    }
+
+    /**
+     * @param  array<int, string> $changeIds
+     * @return int                The number of patches added
+     */
+    public function updatePatches(array $changeIds): int
+    {
+        $patchesCount = 0;
+        $affectedPackages = [];
+
+        $appliedChanges = $this->config->load($this->configFile)->getChanges();
+
+        foreach ($appliedChanges as $appliedChange) {
+            if ($changeIds === [] || in_array((string)$appliedChange->getNumber(), $changeIds, true)) {
+                $patchesCount += $this->createPatches(
+                    [(string)$appliedChange->getNumber()],
+                    $appliedChange->getPatchDirectory(),
+                    $appliedChange->getTests(),
+                    $affectedPackages
+                );
+            }
         }
 
         return $patchesCount;

@@ -53,7 +53,7 @@ final class PatchUtils
         int $numericId,
         string $subject,
         string $patch,
-        string $destination = 'patches',
+        string $destination,
         bool $includeTests = false
     ): array {
         return $this->save(

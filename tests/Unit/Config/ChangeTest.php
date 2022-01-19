@@ -26,18 +26,20 @@ final class ChangeTest extends TestCase
     private function assertProperties(
         Change $change,
         int $number,
-        int $revision,
         iterable $packages,
-        bool $tests
+        bool $tests,
+        string $patchDirectory,
+        int $revision
     ): void {
         self::assertSame($number, $change->getNumber());
-        self::assertSame($revision, $change->getRevision());
 
         foreach ($packages as $package) {
             self::assertTrue($change->getPackages()->has($package));
         }
 
         self::assertSame($tests, $change->getTests());
+        self::assertSame($patchDirectory, $change->getPatchDirectory());
+        self::assertSame($revision, $change->getRevision());
     }
 
     public function testMinimalArguments(): void
@@ -45,9 +47,10 @@ final class ChangeTest extends TestCase
         $this->assertProperties(
             new Change(12345),
             12345,
-            -1,
             [],
-            false
+            false,
+            '',
+            -1
         );
     }
 
@@ -58,16 +61,18 @@ final class ChangeTest extends TestCase
      */
     public function testScenarios(
         int $number,
-        int $revision,
         iterable $packages,
-        bool $tests
+        bool $tests,
+        string $patchDirectory,
+        int $revision
     ): void {
         $this->assertProperties(
-            new Change($number, $revision, $packages, $tests),
+            new Change($number, $packages, $tests, $patchDirectory, $revision),
             $number,
-            $revision,
             $packages,
-            $tests
+            $tests,
+            $patchDirectory,
+            $revision
         );
     }
 
@@ -78,23 +83,25 @@ final class ChangeTest extends TestCase
     {
         yield 'all arguments are used' => [
             'number' => 12345,
-            'revision' => 1,
             'packages' => [
                 'package1',
                 'package2',
                 'package3',
             ],
             'tests' => true,
+            'patchDirectory' => 'core-patches',
+            'revision' => 1,
         ];
         yield 'inverted package order' => [
             'number' => 12345,
-            'revision' => 1,
             'packages' => [
                 'package3',
                 'package2',
                 'package1',
             ],
             'tests' => false,
+            'patchDirectory' => '',
+            'revision' => -1,
         ];
     }
 
@@ -114,7 +121,7 @@ final class ChangeTest extends TestCase
                 'revision' => 1,
                 'packages' => [],
             ],
-            (new Change(12345, 1))->jsonSerialize()
+            (new Change(12345, [], false, '', 1))->jsonSerialize()
         );
 
         self::assertSame(
@@ -124,7 +131,18 @@ final class ChangeTest extends TestCase
                 'packages' => [],
                 'tests' => true,
             ],
-            (new Change(12345, 1, [], true))->jsonSerialize()
+            (new Change(12345, [], true, '', 1))->jsonSerialize()
+        );
+
+        self::assertSame(
+            [
+                'number' => 12345,
+                'revision' => 1,
+                'packages' => [],
+                'tests' => true,
+                'patch-directory' => 'patch-dir',
+            ],
+            (new Change(12345, [], true, 'patch-dir', 1))->jsonSerialize()
         );
     }
 
@@ -138,9 +156,10 @@ final class ChangeTest extends TestCase
                 ]
             ),
             12345,
-            -1,
             ['package1', 'package2', 'package3'],
-            false
+            false,
+            '',
+            -1
         );
 
         $this->assertProperties(
@@ -152,9 +171,10 @@ final class ChangeTest extends TestCase
                 ]
             ),
             12345,
-            1,
             ['package'],
-            false
+            false,
+            '',
+            1
         );
 
         $this->assertProperties(
@@ -163,12 +183,28 @@ final class ChangeTest extends TestCase
                     'number' => 12345,
                     'packages' => ['package'],
                     'tests' => true,
-                    ]
+                ]
             ),
             12345,
-            -1,
             ['package'],
-            true
+            true,
+            '',
+            -1
+        );
+
+        $this->assertProperties(
+            (new Change(0))->jsonUnserialize(
+                [
+                    'number' => 12345,
+                    'packages' => ['package'],
+                    'patch-directory' => 'patch-dir',
+                ]
+            ),
+            12345,
+            ['package'],
+            false,
+            'patch-dir',
+            -1
         );
 
         $this->assertProperties(
@@ -178,12 +214,14 @@ final class ChangeTest extends TestCase
                     'revision' => 1,
                     'packages' => ['package1', 'package2', 'package3'],
                     'tests' => true,
-                    ]
+                    'patch-directory' => 'patch-dir',
+                ]
             ),
             12345,
-            1,
             ['package1', 'package2', 'package3'],
-            true
+            true,
+            'patch-dir',
+            1,
         );
 
         $change = new Change(0);

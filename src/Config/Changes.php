@@ -42,11 +42,12 @@ final class Changes implements PersistenceInterface, IteratorAggregate
      */
     public function add(
         int $number,
-        int $revision = -1,
         iterable $packages = [],
-        bool $tests = false
+        bool $tests = false,
+        string $patchDirectory = '',
+        int $revision = -1
     ): Change {
-        $change = new Change($number, $revision, $packages, $tests);
+        $change = new Change($number, $packages, $tests, $patchDirectory, $revision);
 
         $this->put($change->getNumber(), $change);
 
