@@ -47,9 +47,9 @@
 	},
 	"config": {
 		"allow-plugins": {
-			"ergebnis/composer-normalize": true,
 			"bamarni/composer-bin-plugin": true,
 			"cweagans/composer-patches": true,
+			"ergebnis/composer-normalize": true,
 			"gilbertsoft/typo3-core-patches": true
 		},
 		"sort-packages": true
