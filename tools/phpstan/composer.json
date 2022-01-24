@@ -1,15 +1,16 @@
 {
-    "require": {
-        "phpstan/extension-installer": "*",
-        "phpstan/phpstan-deprecation-rules": "*",
-        "phpstan/phpstan-phpunit": "*",
-        "phpstan/phpstan-strict-rules": "*",
-        "phpstan/phpstan-symfony": "*",
-        "rector/rector": "*"
-    },
-    "config": {
-        "allow-plugins": {
-            "phpstan/extension-installer": true
-        }
-    }
+	"require": {
+		"jangregor/phpstan-prophecy": "*",
+		"phpstan/extension-installer": "*",
+		"phpstan/phpstan-deprecation-rules": "*",
+		"phpstan/phpstan-phpunit": "*",
+		"phpstan/phpstan-strict-rules": "*",
+		"phpstan/phpstan-symfony": "*",
+		"rector/rector": "*"
+	},
+	"config": {
+		"allow-plugins": {
+			"phpstan/extension-installer": true
+		}
+	}
 }

@@ -1,5 +1,5 @@
 {
-    "require": {
-        "maglnet/composer-require-checker": "*"
-    }
+	"require": {
+		"maglnet/composer-require-checker": "*"
+	}
 }

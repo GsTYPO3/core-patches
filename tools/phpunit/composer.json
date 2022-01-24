@@ -1,0 +1,6 @@
+{
+	"require": {
+		"phpunit/phpunit": "^8.5 || ^9.5",
+		"phpunit/phpcov": ">=6.0.1"
+	}
+}

@@ -27,6 +27,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 
     $parameters->set(Option::BOOTSTRAP_FILES, [
         __DIR__ . '/vendor/autoload.php',
+        __DIR__ . '/tools/phpunit/vendor/autoload.php',
     ]);
 
     // Define what rule sets will be applied
