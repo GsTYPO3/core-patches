@@ -38,7 +38,7 @@ final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
     private array $patchesToRemove = [];
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function activate(Composer $composer, IOInterface $io): void
     {
@@ -48,21 +48,21 @@ final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function deactivate(Composer $composer, IOInterface $io): void
     {
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function uninstall(Composer $composer, IOInterface $io): void
     {
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      *
      * @return array<class-string<ComposerCommandProvider>, class-string<CommandProvider>>
      */
@@ -74,7 +74,7 @@ final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      *
      * @return array<string, array<array{0: string, 1?: int}|int|string>|string>
      */

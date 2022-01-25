@@ -25,7 +25,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 final class RemoveCommand extends BaseCommand
 {
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     protected function configure(): void
     {
@@ -43,7 +43,7 @@ final class RemoveCommand extends BaseCommand
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      *
      * @throws InvalidArgumentException
      * @throws UnexpectedValueException

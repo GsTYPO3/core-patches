@@ -282,8 +282,8 @@ final class ComposerUtils
     }
 
     /**
-     * @param array<int, string>   $changeIds
-     * @return int The number of patches added
+     * @param  array<int, string> $changeIds
+     * @return int                The number of patches added
      */
     public function addPatches(array $changeIds, string $destination, bool $includeTests): int
     {
@@ -400,8 +400,8 @@ final class ComposerUtils
     }
 
     /**
-     * @param array<int, string>   $changeIds
-     * @return int The number of patches removed
+     * @param  array<int, string> $changeIds
+     * @return int                The number of patches removed
      */
     public function removePatches(array $changeIds, bool $skipUnistall = false): int
     {

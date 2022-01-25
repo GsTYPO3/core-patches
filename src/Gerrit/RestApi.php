@@ -68,7 +68,7 @@ final class RestApi
     }
 
     /**
-     * @return string The normalized subject
+     * @return string                   The normalized subject
      * @throws UnexpectedValueException
      *
      * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-id

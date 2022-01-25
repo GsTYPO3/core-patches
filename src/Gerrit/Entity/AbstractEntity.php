@@ -19,7 +19,7 @@ use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 abstract class AbstractEntity
 {
     /**
-     * @param mixed $destinationProperty @todo directly declare on parameter with PHP 8.0
+     * @param  mixed                    $destinationProperty @todo directly declare on parameter with PHP 8.0
      * @throws UnexpectedValueException
      */
     protected static function assignProperty(

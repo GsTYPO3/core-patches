@@ -38,12 +38,14 @@ final class PatchUtils
     }
 
     /**
-     * @param int       $numericId      The numeric ID.
-     * @param string    $subject        The subject of the patch.
-     * @param string    $patch          The raw patch.
-     * @param string    $destination    The destination relative to the composer root folder. Defaults to 'patches'.
-     * @param bool      $includeTests   If set to true changes in test files are skiped. Defaults to false.
-     * @return array<string, array<string, string>>    The patches split to core packages.
+     * @param  int                                  $numericId    the numeric ID
+     * @param  string                               $subject      the subject of the patch
+     * @param  string                               $patch        the raw patch
+     * @param  string                               $destination  the destination relative to the composer root folder,
+     *                                                            defaults to 'patches'
+     * @param  bool                                 $includeTests if set to true changes in test files are skiped,
+     *                                                            defaults to false
+     * @return array<string, array<string, string>> the patches split to core packages
      * @throws InvalidPatchException
      * @throws NoPatchException
      */
@@ -63,9 +65,9 @@ final class PatchUtils
     }
 
     /**
-     * @param array<int, int>                       $numericIds The numeric IDs of the patches to remove.
-     * @param array<string, array<string, string>>  $patches    The available patches.
-     * @return array<string, array<string, string>> The removed patches.
+     * @param  array<int, int>                      $numericIds the numeric IDs of the patches to remove
+     * @param  array<string, array<string, string>> $patches    the available patches
+     * @return array<string, array<string, string>> the removed patches
      */
     public function remove(array $numericIds, array $patches): array
     {
@@ -92,9 +94,9 @@ final class PatchUtils
     }
 
     /**
-     * @param array<int, int>                       $numericIds The numeric IDs of the patches to remove.
-     * @param array<string, array<string, string>>  $patches    The available patches.
-     * @return array<string, array<string, string>> The removed patches.
+     * @param  array<int, int>                      $numericIds the numeric IDs of the patches to remove
+     * @param  array<string, array<string, string>> $patches    the available patches
+     * @return array<string, array<string, string>> the removed patches
      */
     public function prepareRemove(array $numericIds, array $patches): array
     {
@@ -124,9 +126,10 @@ final class PatchUtils
     }
 
     /**
-     * @param string    $patch          The raw patch.
-     * @param bool      $includeTests   If set to true changes in test files are also included. Defaults to false.
-     * @return array<string, array<int, string>>    The patch split into core packages.
+     * @param  string                            $patch        the raw patch
+     * @param  bool                              $includeTests if set to true changes in test files are also included,
+     *                                                         defaults to false
+     * @return array<string, array<int, string>> the patch split into core packages
      * @throws InvalidPatchException
      */
     public function split(string $patch, bool $includeTests): array
@@ -198,11 +201,11 @@ final class PatchUtils
     }
 
     /**
-     * @param string                            $destination    The destination relative to the composer root folder.
-     * @param int                               $numericId      The numeric ID.
-     * @param string                            $subject        The subject.
-     * @param array<string, array<int, string>> $patches
-     * @return array<string, array<string, string>>    The patch split to core packages.
+     * @param  string                               $destination the destination relative to the composer root folder
+     * @param  int                                  $numericId   the numeric ID
+     * @param  string                               $subject     the subject
+     * @param  array<string, array<int, string>>    $patches
+     * @return array<string, array<string, string>> the patch split to core packages
      * @throws NoPatchException
      */
     public function save(
