@@ -13,7 +13,11 @@ $config = \TYPO3\CodingStandards\CsFixerConfig::create();
 $config
     ->setHeader($header, true)
     ->addRules([
-        'phpdoc_no_empty_return' => false,
+        '@PSR12' => true,
+        'phpdoc_align' => true,
+        'phpdoc_annotation_without_dot' => true,
+        'phpdoc_tag_casing' => true,
+        'phpdoc_tag_type' => true,
     ])
     ->getFinder()
     ->exclude('tests/project/public')

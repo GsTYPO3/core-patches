@@ -18,7 +18,7 @@ use Composer\Plugin\Capability\CommandProvider as CommandProviderCapability;
 final class CommandProvider implements CommandProviderCapability
 {
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      * @return Command\Typo3\Patch\ApplyCommand[]|Command\Typo3\Patch\RemoveCommand[]
      */
     public function getCommands(): array

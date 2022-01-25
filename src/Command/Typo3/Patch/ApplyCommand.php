@@ -27,7 +27,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 final class ApplyCommand extends BaseCommand
 {
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     protected function configure(): void
     {
@@ -58,7 +58,7 @@ final class ApplyCommand extends BaseCommand
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      *
      * @throws InvalidArgumentException
      * @throws UnexpectedValueException
