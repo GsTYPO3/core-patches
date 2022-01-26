@@ -20,6 +20,7 @@ dependency for production usage.
 - [Installation](#installation)
 - [Usage](#usage)
   - [Adding a change](#adding-a-change)
+  - [Updating a change](#updating-a-change)
   - [Removing a change](#removing-a-change)
   - [Supported change ID formats](#supported-change-id-formats)
 - [Detection of merged changes on update or install](#detection-of-merged-changes-on-update-or-install)
@@ -74,6 +75,23 @@ installing the sources instead of the dist packages for the affected packages.
 ```bash
 composer typo3:patch:apply --tests 12345
 composer typo3:patch:apply -t 12345
+```
+
+### Updating a change
+
+To update the applied patches to the last patch sets from Gerrit just run the
+following command, which will update all patches:
+
+```bash
+composer typo3:patch:update
+```
+
+It is also possible to just update some single patches by providing the change
+ID as argument or multiple arguments for multiple changes to update at once:
+
+```bash
+composer typo3:patch:update 12345
+composer typo3:patch:update 12345 23456 34567
 ```
 
 ### Removing a change
