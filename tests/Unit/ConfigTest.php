@@ -22,7 +22,7 @@ final class ConfigTest extends TestCase
 {
     public function testLoadWorksProperly(): void
     {
-        $jsonFile = $this->prophet->prophesize(JsonFile::class);
+        $jsonFile = $this->prophesize(JsonFile::class);
         $jsonFile->read()->willReturn([
             'extra' => [
                 'gilbertsoft/typo3-core-patches' => [
@@ -41,6 +41,7 @@ final class ConfigTest extends TestCase
                         ],
                     ],
                     'preferred-install-changed' => ['package1', 'package2'],
+                    'patch-directory' => 'patch-dir',
                 ],
             ],
         ]);
@@ -51,6 +52,7 @@ final class ConfigTest extends TestCase
 
         self::assertCount(2, $config->getChanges());
         self::assertCount(2, $config->getPreferredInstallChanged());
+        self::assertSame('patch-dir', $config->getPatchDirectory());
 
         $jsonFile->read()->willReturn([
             'extra' => [],
@@ -64,7 +66,7 @@ final class ConfigTest extends TestCase
 
     public function testSaveWorksProperly(): void
     {
-        $jsonConfigSource = $this->prophet->prophesize(JsonConfigSource::class);
+        $jsonConfigSource = $this->prophesize(JsonConfigSource::class);
 
         $jsonConfigSource->addProperty(
             Argument::exact('extra.gilbertsoft/typo3-core-patches.applied-changes'),
@@ -76,13 +78,22 @@ final class ConfigTest extends TestCase
             Argument::type('array')
         )->shouldBeCalledTimes(2);
 
+        $jsonConfigSource->addProperty(
+            Argument::exact('extra.gilbertsoft/typo3-core-patches.patch-directory'),
+            Argument::type('string')
+        )->shouldBeCalledTimes(2);
+
         $jsonConfigSource->removeProperty(
             Argument::exact('extra.gilbertsoft/typo3-core-patches.applied-changes')
-        )->shouldBeCalledOnce();
+        )->shouldBeCalledTimes(2);
 
         $jsonConfigSource->removeProperty(
             Argument::exact('extra.gilbertsoft/typo3-core-patches.preferred-install-changed')
-        )->shouldBeCalledOnce();
+        )->shouldBeCalledTimes(2);
+
+        $jsonConfigSource->removeProperty(
+            Argument::exact('extra.gilbertsoft/typo3-core-patches.patch-directory')
+        )->shouldBeCalledTimes(2);
 
         $jsonConfigSource->removeProperty(
             Argument::exact('extra.gilbertsoft/typo3-core-patches')
@@ -91,6 +102,7 @@ final class ConfigTest extends TestCase
         $config = new Config();
         $config->getChanges()->add(1);
         $config->getPreferredInstallChanged()->add('package');
+        self::assertSame($config, $config->setPatchDirectory('patch-dir'));
 
         self::assertSame($config, $config->save($jsonConfigSource->reveal()));
 
@@ -101,6 +113,11 @@ final class ConfigTest extends TestCase
 
         $config = new Config();
         $config->getPreferredInstallChanged()->add('package');
+
+        self::assertSame($config, $config->save($jsonConfigSource->reveal()));
+
+        $config = new Config();
+        self::assertSame($config, $config->setPatchDirectory('patch-dir'));
 
         self::assertSame($config, $config->save($jsonConfigSource->reveal()));
 

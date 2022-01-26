@@ -15,17 +15,21 @@ namespace GsTYPO3\CorePatches;
 
 use Composer\Plugin\Capability\CommandProvider as CommandProviderCapability;
 
+/**
+ * @codeCoverageIgnore
+ */
 final class CommandProvider implements CommandProviderCapability
 {
     /**
      * @inheritDoc
-     * @return Command\Typo3\Patch\ApplyCommand[]|Command\Typo3\Patch\RemoveCommand[]
+     * @return Command\Typo3\Patch\ApplyCommand[]|Command\Typo3\Patch\RemoveCommand[]|Command\Typo3\Patch\UpdateCommand[]
      */
     public function getCommands(): array
     {
         return [
             new Command\Typo3\Patch\ApplyCommand(),
             new Command\Typo3\Patch\RemoveCommand(),
+            new Command\Typo3\Patch\UpdateCommand(),
         ];
     }
 }

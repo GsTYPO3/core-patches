@@ -118,9 +118,11 @@
 		"ci:tests:smoke": [
 			"@composer test:typo3:patch:apply",
 			"@composer test:typo3:patch:update",
+			"@composer test:typo3:patch:setup:update",
 			"@composer test:typo3:patch:remove",
 			"@composer test:typo3:patch:apply-with-tests",
 			"@composer test:typo3:patch:update",
+			"@composer test:typo3:patch:setup:update",
 			"@composer test:typo3:patch:remove"
 		],
 		"ci:tests:unit": "@php phpunit -c tests/Unit/phpunit.xml",
@@ -144,7 +146,7 @@
 		],
 		"fix:php:cs": "php-cs-fixer fix",
 		"fix:php:rector": "rector process --no-diffs",
-		"fix:php:sniff": "phpcbf --standard=PSR12 src",
+		"fix:php:sniff": "phpcbf --standard=PSR12 src tests",
 		"test:php:unit": [
 			"Composer\\Config::disableProcessTimeout",
 			"phpunit"
@@ -175,9 +177,15 @@
 			"@composer install -d.build/project --ansi",
 			".build/project/vendor/bin/composer update -d.build/project --ansi --no-interaction"
 		],
-		"test:typo3:patch:update": [
+		"test:typo3:patch:setup:update": [
 			".build/project/vendor/bin/composer require 'typo3/cms-core:^10.4 || ^11.5' -d.build/project --ansi --no-interaction",
 			".build/project/vendor/bin/composer update -d.build/project --ansi --no-interaction"
+		],
+		"test:typo3:patch:update": [
+			".build/project/vendor/bin/composer typo3:patch:update -d.build/project --ansi --no-interaction",
+			".build/project/vendor/bin/composer validate -d.build/project --ansi",
+			".build/project/vendor/bin/composer typo3:patch:update 73021 -d.build/project --ansi --no-interaction",
+			".build/project/vendor/bin/composer validate -d.build/project --ansi"
 		],
 		"tools": [
 			"@tools:static"
@@ -229,8 +237,12 @@
 		"tools:tests:functional": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-functional.xml --testsuite \"Functional Test Suite\"'",
 		"tools:tests:smoke": [
 			"@composer test:typo3:patch:apply",
+			"@composer test:typo3:patch:update",
+			"@composer test:typo3:patch:setup:update",
 			"@composer test:typo3:patch:remove",
 			"@composer test:typo3:patch:apply-with-tests",
+			"@composer test:typo3:patch:update",
+			"@composer test:typo3:patch:setup:update",
 			"@composer test:typo3:patch:remove"
 		],
 		"tools:tests:unit": "@php phpunit -c tests/Unit/phpunit.xml",

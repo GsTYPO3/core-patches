@@ -50,6 +50,8 @@ final class RemoveCommand extends BaseCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        // @codeCoverageIgnoreStart
+
         // Get parameters
         if (!is_array($changeIds = $input->getArgument('change-id'))) {
             throw new InvalidArgumentException('Invalid change IDs.');
@@ -59,6 +61,8 @@ final class RemoveCommand extends BaseCommand
         if (!($composer = $this->getComposer(true)) instanceof Composer) {
             throw new UnexpectedValueException('Invalid Composer instance.', 1_640_857_366);
         }
+
+        // @codeCoverageIgnoreEnd
 
         $io = $this->getIO();
         $composerUtils = new ComposerUtils($composer, $io);

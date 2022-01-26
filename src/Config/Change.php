@@ -37,6 +37,11 @@ final class Change implements PersistenceInterface
      */
     private const TESTS = 'tests';
 
+    /**
+     * @var string
+     */
+    private const PATCH_DIR = 'patch-directory';
+
     private int $number;
 
     private int $revision;
@@ -45,19 +50,23 @@ final class Change implements PersistenceInterface
 
     private bool $tests;
 
+    private string $patchDirectory = '';
+
     /**
      * @param iterable<int, string> $packages
      */
     public function __construct(
         int $number,
-        int $revision = -1,
         iterable $packages = [],
-        bool $tests = false
+        bool $tests = false,
+        string $patchDirectory = '',
+        int $revision = -1
     ) {
         $this->number = $number;
         $this->revision = $revision;
         $this->packages = new Packages($packages);
         $this->tests = $tests;
+        $this->patchDirectory = $patchDirectory;
     }
 
     public function getNumber(): int
@@ -80,6 +89,11 @@ final class Change implements PersistenceInterface
         return $this->tests;
     }
 
+    public function getPatchDirectory(): string
+    {
+        return $this->patchDirectory;
+    }
+
     /**
      * Returns a representation that can be natively converted to JSON, which is
      * called when invoking json_encode.
@@ -100,6 +114,10 @@ final class Change implements PersistenceInterface
 
         if ($this->tests) {
             $array[self::TESTS] = $this->tests;
+        }
+
+        if ($this->patchDirectory !== '') {
+            $array[self::PATCH_DIR] = $this->patchDirectory;
         }
 
         return $array;
@@ -133,6 +151,12 @@ final class Change implements PersistenceInterface
         }
 
         $this->tests = $tests;
+
+        if (!is_string($patchDirectory = $json[self::PATCH_DIR] ?? null)) {
+            $patchDirectory = '';
+        }
+
+        $this->patchDirectory = $patchDirectory;
 
         return $this;
     }
