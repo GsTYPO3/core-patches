@@ -7,7 +7,8 @@ on:
     - cron: '44 4 * * *'
 
 env:
-  COMPOSER_FLAGS: --ansi --no-interaction --no-progress --prefer-dist
+  COMPOSER_FLAGS: --ansi --no-interaction --no-progress
+  COMPOSER_INSTALL_FLAGS: --prefer-dist
   COMPOSER_UPDATE_FLAGS: ''
 
 jobs:
@@ -43,7 +44,7 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        run: composer install ${{ env.COMPOSER_FLAGS }}
+        run: composer install ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }}
 
       - name: Validate composer.json
         run: vendor/bin/composer ci:composer:validate
@@ -86,7 +87,7 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        run: composer install ${{ env.COMPOSER_FLAGS }}
+        run: composer install ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }}
 
       - name: Lint YAML files
         run: vendor/bin/composer ci:yaml:lint
@@ -138,11 +139,11 @@ jobs:
       - name: Set platform.php for nightly
         if: ${{ matrix.php-version == 'nightly' }}
         run: |
-          composer install --no-scripts ${{ env.COMPOSER_FLAGS }}
+          composer install --no-scripts ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }}
           composer bin phpunit config platform.php 8.1.99
 
       - name: Install dependencies
-        run: composer update ${{ env.COMPOSER_UPDATE_FLAGS }} ${{ env.COMPOSER_FLAGS }}
+        run: composer update ${{ env.COMPOSER_UPDATE_FLAGS }} ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }}
 
       - name: Lint PHP files
         run: composer ci:php:lint
@@ -180,7 +181,7 @@ jobs:
             ${{ runner.os }}-composer-latest-
 
       - name: Install dependencies
-        run: composer install ${{ env.COMPOSER_FLAGS }}
+        run: composer install ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }}
 
       - name: Validation of Rector rules for PHP files
         run: composer ci:php:rector
@@ -218,7 +219,7 @@ jobs:
             ${{ runner.os }}-composer-latest-
 
       - name: Install dependencies
-        run: composer install ${{ env.COMPOSER_FLAGS }}
+        run: composer install ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }}
 
       - name: Validation of coding standards for PHP files
         run: composer ci:php:cs-fixer
@@ -256,7 +257,7 @@ jobs:
             ${{ runner.os }}-composer-latest-
 
       - name: Install dependencies
-        run: composer install ${{ env.COMPOSER_FLAGS }}
+        run: composer install ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }}
 
       - name: Validation of coding standards
         run: composer ci:php:sniff
@@ -294,7 +295,7 @@ jobs:
             ${{ runner.os }}-composer-latest-
 
       - name: Install dependencies
-        run: composer install ${{ env.COMPOSER_FLAGS }}
+        run: composer install ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }}
 
       - name: Detection of copy/paste code in PHP files
         run: composer ci:php:copypaste
@@ -368,16 +369,28 @@ jobs:
         if: contains(matrix.dependencies, 'highest')
         run: composer config minimum-stability alpha
 
+      - name: Install dependencies without deprecation rules
+        run: composer install --no-scripts ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }}
+
       - name: Set platform.php for nightly
         if: ${{ matrix.php-version == 'nightly' }}
-        run: |
-          composer install --no-scripts ${{ env.COMPOSER_FLAGS }}
-          composer bin phpunit config platform.php 8.1.99
+        run: composer bin phpunit config platform.php 8.1.99
 
-      - name: Install dependencies
-        run: composer update ${{ env.COMPOSER_UPDATE_FLAGS }} ${{ env.COMPOSER_FLAGS }}
+      - name: Install dependencies without deprecation rules
+        run: |
+          composer bin phpstan -- remove --no-update ${{ env.COMPOSER_FLAGS }} phpstan/phpstan-deprecation-rules
+          composer update ${{ env.COMPOSER_UPDATE_FLAGS }} ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }}
 
       - name: Run PHPStan
+        run: composer ci:php:stan
+
+      - name: Install dependencies with deprecation rules
+        run: |
+          composer bin phpstan require --no-update ${{ env.COMPOSER_FLAGS }} phpstan/phpstan-deprecation-rules:*
+          composer update ${{ env.COMPOSER_UPDATE_FLAGS }} ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }}
+
+      - name: Run PHPStan with deprecation rules
+        continue-on-error: true
         run: composer ci:php:stan
 
   tests:
@@ -461,17 +474,17 @@ jobs:
       - name: Enforce Composer 2.1 for PHP 8
         if: ${{ matrix.php-version != '7.4' }}
         run: |
-          composer require ${{ env.COMPOSER_FLAGS }} --dev --no-update composer/composer ^2.1
-          composer require ${{ env.COMPOSER_FLAGS }} -dtests/project --dev --no-update composer/composer ^2.1
+          composer require ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }} --dev --no-update composer/composer ^2.1
+          composer require ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }} -dtests/project --dev --no-update composer/composer ^2.1
 
       - name: Set platform.php for nightly
         if: ${{ matrix.php-version == 'nightly' }}
         run: |
-          composer install --no-scripts ${{ env.COMPOSER_FLAGS }}
+          composer install --no-scripts ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }}
           composer bin phpunit config platform.php 8.1.99
 
       - name: Install dependencies
-        run: composer update ${{ env.COMPOSER_UPDATE_FLAGS }} ${{ env.COMPOSER_FLAGS }}
+        run: composer update ${{ env.COMPOSER_UPDATE_FLAGS }} ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }}
 
       - name: Unit Tests
         run: composer ci:tests:unit
@@ -489,7 +502,7 @@ jobs:
           COVERALLS_FLAG_NAME: php-${{ matrix.php-version }}
         run: |
           composer exec phpcov -- merge --clover var/log/clover.xml var/log/cov
-          composer global require php-coveralls/php-coveralls ${{ env.COMPOSER_FLAGS }}
+          composer global require ${{ env.COMPOSER_INSTALL_FLAGS }} ${{ env.COMPOSER_FLAGS }} php-coveralls/php-coveralls
           composer global exec php-coveralls -- --coverage_clover=var/log/clover.xml -vvv --json_path=var/log/coveralls-upload.json
 
       - name: Archive Logs

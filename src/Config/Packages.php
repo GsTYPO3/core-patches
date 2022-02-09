@@ -13,40 +13,48 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches\Config;
 
+use GsTYPO3\CorePatches\Config;
+use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 use Iterator;
 use IteratorAggregate;
 
 /**
  * @implements IteratorAggregate<int, string>
  */
-final class Packages implements PersistenceInterface, IteratorAggregate
+final class Packages implements ConfigAwareInterface, PersistenceInterface, IteratorAggregate
 {
+    private Config $config;
+
     /**
      * @var array<int, string>
      */
     private array $packages = [];
 
     /**
-     * @param iterable<int, string> $values
+     * @param iterable<int, string> $packages
      */
-    public function __construct(iterable $values = [])
-    {
-        foreach ($values as $value) {
-            $this->add($value);
+    public function __construct(
+        Config $config,
+        iterable $packages = []
+    ) {
+        $this->config = $config;
+
+        foreach ($packages as $package) {
+            $this->add($package);
         }
     }
 
-    public function add(string $value): void
+    public function add(string $package): void
     {
-        $this->packages[] = $value;
+        $this->packages[] = $package;
 
         sort($this->packages);
     }
 
-    private function find(string $value): int
+    private function find(string $needle): int
     {
         foreach ($this->packages as $key => $package) {
-            if ($package === $value) {
+            if ($package === $needle) {
                 return $key;
             }
         }
@@ -54,9 +62,9 @@ final class Packages implements PersistenceInterface, IteratorAggregate
         return -1;
     }
 
-    public function has(string $value): bool
+    public function has(string $package): bool
     {
-        return $this->find($value) > -1;
+        return $this->find($package) > -1;
     }
 
     public function isEmpty(): bool
@@ -64,9 +72,17 @@ final class Packages implements PersistenceInterface, IteratorAggregate
         return $this->packages === [];
     }
 
-    public function remove(string $value): ?string
+    public function remove(string $package): ?string
     {
-        return ($index = $this->find($value)) > -1 ? array_splice($this->packages, $index, 1)[0] : null;
+        return ($index = $this->find($package)) > -1 ? array_splice($this->packages, $index, 1)[0] : null;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getConfig(): Config
+    {
+        return $this->config;
     }
 
     /**
@@ -90,9 +106,14 @@ final class Packages implements PersistenceInterface, IteratorAggregate
         $this->packages = [];
 
         foreach ($json as $singleJson) {
-            if (is_string($singleJson)) {
-                $this->add($singleJson);
+            if (!is_string($singleJson)) {
+                throw new UnexpectedValueException(sprintf(
+                    'Package is not a string (%s).',
+                    var_export($singleJson, true)
+                ));
             }
+
+            $this->add($singleJson);
         }
 
         return $this;

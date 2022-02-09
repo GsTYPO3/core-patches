@@ -11,9 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace GsTYPO3\CorePatches\Tests\Unit\Config;
+namespace GsTYPO3\CorePatches\Tests\Unit\Config\Changes;
 
-use GsTYPO3\CorePatches\Config\Change;
+use GsTYPO3\CorePatches\Config;
+use GsTYPO3\CorePatches\Config\Changes\Change;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 use GsTYPO3\CorePatches\Tests\Unit\TestCase;
 use Iterator;
@@ -31,6 +32,10 @@ final class ChangeTest extends TestCase
         string $patchDirectory,
         int $revision
     ): void {
+        if ($patchDirectory === '') {
+            $patchDirectory = $change->getConfig()->getPatchDirectory();
+        }
+
         self::assertSame($number, $change->getNumber());
 
         foreach ($packages as $package) {
@@ -44,8 +49,10 @@ final class ChangeTest extends TestCase
 
     public function testMinimalArguments(): void
     {
+        $config = new Config();
+
         $this->assertProperties(
-            new Change(12345),
+            new Change($config, 12345),
             12345,
             [],
             false,
@@ -66,8 +73,10 @@ final class ChangeTest extends TestCase
         string $patchDirectory,
         int $revision
     ): void {
+        $config = new Config();
+
         $this->assertProperties(
-            new Change($number, $packages, $tests, $patchDirectory, $revision),
+            new Change($config, $number, $packages, $tests, $patchDirectory, $revision),
             $number,
             $packages,
             $tests,
@@ -105,57 +114,66 @@ final class ChangeTest extends TestCase
         ];
     }
 
+    public function testGetConfig(): void
+    {
+        $config = new Config();
+
+        self::assertSame(
+            $config,
+            (new Change($config, 1))->getConfig()
+        );
+    }
+
     public function testJsonSerialize(): void
     {
+        $config = new Config();
+
         self::assertSame(
             [
-                'number' => 12345,
                 'packages' => [],
             ],
-            (new Change(12345))->jsonSerialize()
+            (new Change($config, 12345))->jsonSerialize()
         );
 
         self::assertSame(
             [
-                'number' => 12345,
                 'revision' => 1,
                 'packages' => [],
             ],
-            (new Change(12345, [], false, '', 1))->jsonSerialize()
+            (new Change($config, 12345, [], false, '', 1))->jsonSerialize()
         );
 
         self::assertSame(
             [
-                'number' => 12345,
                 'revision' => 1,
                 'packages' => [],
                 'tests' => true,
             ],
-            (new Change(12345, [], true, '', 1))->jsonSerialize()
+            (new Change($config, 12345, [], true, '', 1))->jsonSerialize()
         );
 
         self::assertSame(
             [
-                'number' => 12345,
                 'revision' => 1,
                 'packages' => [],
                 'tests' => true,
                 'patch-directory' => 'patch-dir',
             ],
-            (new Change(12345, [], true, 'patch-dir', 1))->jsonSerialize()
+            (new Change($config, 12345, [], true, 'patch-dir', 1))->jsonSerialize()
         );
     }
 
     public function testJsonUnserialize(): void
     {
+        $config = new Config();
+
         $this->assertProperties(
-            (new Change(0))->jsonUnserialize(
+            (new Change($config, 0))->jsonUnserialize(
                 [
-                    'number' => 12345,
                     'packages' => ['package1', 'package2', 'package3'],
                 ]
             ),
-            12345,
+            0,
             ['package1', 'package2', 'package3'],
             false,
             '',
@@ -163,14 +181,13 @@ final class ChangeTest extends TestCase
         );
 
         $this->assertProperties(
-            (new Change(0))->jsonUnserialize(
+            (new Change($config, 0))->jsonUnserialize(
                 [
-                    'number' => 12345,
                     'revision' => 1,
                     'packages' => ['package'],
                 ]
             ),
-            12345,
+            0,
             ['package'],
             false,
             '',
@@ -178,14 +195,13 @@ final class ChangeTest extends TestCase
         );
 
         $this->assertProperties(
-            (new Change(0))->jsonUnserialize(
+            (new Change($config, 0))->jsonUnserialize(
                 [
-                    'number' => 12345,
                     'packages' => ['package'],
                     'tests' => true,
                 ]
             ),
-            12345,
+            0,
             ['package'],
             true,
             '',
@@ -193,14 +209,13 @@ final class ChangeTest extends TestCase
         );
 
         $this->assertProperties(
-            (new Change(0))->jsonUnserialize(
+            (new Change($config, 0))->jsonUnserialize(
                 [
-                    'number' => 12345,
                     'packages' => ['package'],
                     'patch-directory' => 'patch-dir',
                 ]
             ),
-            12345,
+            0,
             ['package'],
             false,
             'patch-dir',
@@ -208,43 +223,36 @@ final class ChangeTest extends TestCase
         );
 
         $this->assertProperties(
-            (new Change(0))->jsonUnserialize(
+            (new Change($config, 0))->jsonUnserialize(
                 [
-                    'number' => 12345,
                     'revision' => 1,
                     'packages' => ['package1', 'package2', 'package3'],
                     'tests' => true,
                     'patch-directory' => 'patch-dir',
                 ]
             ),
-            12345,
+            0,
             ['package1', 'package2', 'package3'],
             true,
             'patch-dir',
             1,
         );
 
-        $change = new Change(0);
+        $change = new Change($config, 0);
         self::assertSame(
             $change,
             $change->jsonUnserialize([
-                'number' => 12345,
                 'packages' => ['package'],
             ])
         );
     }
 
-    public function testJsonUnserializeThrowsOnMissingNumber(): void
-    {
-        $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage('Number "NULL" is not numeric or missing.');
-        (new Change(0))->jsonUnserialize([]);
-    }
-
     public function testJsonUnserializeThrowsOnMissingPackages(): void
     {
+        $config = new Config();
+
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('Packages is not an array or missing.');
-        (new Change(0))->jsonUnserialize(['number' => 12345]);
+        (new Change($config, 0))->jsonUnserialize(['number' => 12345]);
     }
 }

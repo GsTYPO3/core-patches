@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace GsTYPO3\CorePatches\Utility;
 
 use Composer\Composer;
-use Composer\Config\JsonConfigSource;
 use Composer\Console\Application;
 use Composer\DependencyResolver\Operation\UninstallOperation;
 use Composer\Factory;
@@ -23,8 +22,7 @@ use Composer\Json\JsonFile;
 use Composer\Package\PackageInterface;
 use Composer\Semver\Semver;
 use GsTYPO3\CorePatches\Config;
-use GsTYPO3\CorePatches\Config\Change;
-use GsTYPO3\CorePatches\Config\Packages;
+use GsTYPO3\CorePatches\Config\PreferredInstall;
 use GsTYPO3\CorePatches\Exception\CommandExecutionException;
 use GsTYPO3\CorePatches\Exception\InvalidResponseException;
 use GsTYPO3\CorePatches\Exception\NoPatchException;
@@ -40,16 +38,6 @@ final class ComposerUtils
     /**
      * @var string
      */
-    private const CONFIG = 'config';
-
-    /**
-     * @var string
-     */
-    private const CONFIG_PREFERRED_INSTALL = 'preferred-install';
-
-    /**
-     * @var string
-     */
     private const EXTRA = 'extra';
 
     private Composer $composer;
@@ -59,8 +47,6 @@ final class ComposerUtils
     private Config $config;
 
     private JsonFile $configFile;
-
-    private JsonConfigSource $configSource;
 
     private Application $application;
 
@@ -75,7 +61,6 @@ final class ComposerUtils
 
         $this->config = new Config();
         $this->configFile = new JsonFile(Factory::getComposerFile(), null, $this->io);
-        $this->configSource = new JsonConfigSource($this->configFile);
         $this->application = new Application();
         $this->application->setAutoExit(false);
 
@@ -88,9 +73,13 @@ final class ComposerUtils
      */
     private function addPatchesToConfigFile(array $patches): void
     {
-        foreach ($patches as $packageName => $packagePatches) {
-            $this->configSource->addProperty(sprintf('extra.patches.%s', $packageName), $packagePatches);
+        $configPatches = $this->config->load($this->configFile)->getPatches();
+
+        foreach ($patches as $packgeName => $packagePatches) {
+            $configPatches->add($packgeName, $packagePatches);
         }
+
+        $this->config->save($this->configFile);
     }
 
     /**
@@ -112,26 +101,7 @@ final class ComposerUtils
 
         $changes->add($numericId, $packages, $includeTests, $destination, $revision);
 
-        $this->config->save($this->configSource);
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function getPreferredInstall(): array
-    {
-        $config = $this->configFile->read();
-
-        /** @noRector \Rector\EarlyReturn\Rector */
-        if (
-            !is_array($config)
-            || !is_array($config[self::CONFIG] ?? null)
-            || !is_array($config[self::CONFIG][self::CONFIG_PREFERRED_INSTALL] ?? null)
-        ) {
-            return [];
-        }
-
-        return $config[self::CONFIG][self::CONFIG_PREFERRED_INSTALL];
+        $this->config->save($this->configFile);
     }
 
     private function addPreferredInstallChanged(string $packageName): void
@@ -144,7 +114,7 @@ final class ComposerUtils
         }
 
         $preferredInstallChanged->add($packageName);
-        $this->config->save($this->configSource);
+        $this->config->save($this->configFile);
     }
 
     private function removePreferredInstallChanged(string $packageName): void
@@ -157,7 +127,7 @@ final class ComposerUtils
         }
 
         $preferredInstallChanged->remove($packageName);
-        $this->config->save($this->configSource);
+        $this->config->save($this->configFile);
     }
 
     /**
@@ -248,6 +218,7 @@ final class ComposerUtils
 
     private function setSourceInstall(string $packageName): void
     {
+        /*
         $currentValue = $this->getPreferredInstall();
 
         if (isset($currentValue[$packageName]) && $currentValue[$packageName] === 'source') {
@@ -259,6 +230,18 @@ final class ComposerUtils
             'preferred-install.' . $packageName,
             'source'
         );
+        */
+
+        $preferredInstall = $this->config->load($this->configFile)->getPreferredInstall();
+
+        if ($preferredInstall->has($packageName, PreferredInstall::METHOD_SOURCE)) {
+            // source install for this package is already configured, skip it
+            return;
+        }
+
+        $preferredInstall->add($packageName, PreferredInstall::METHOD_SOURCE);
+
+        $this->config->save($this->configFile);
 
         $this->addPreferredInstallChanged($packageName);
     }
@@ -276,23 +259,29 @@ final class ComposerUtils
      */
     private function removePatchesFromConfigFile(array $patches): void
     {
-        foreach (array_keys($patches) as $packageName) {
-            $this->configSource->removeProperty(sprintf('extra.patches.%s', $packageName));
+        $configPatches = $this->config->load($this->configFile)->getPatches();
+
+        foreach ($patches as $packgeName => $packagePatches) {
+            $configPatches->remove($packgeName, $packagePatches);
         }
+
+        $this->config->save($this->configFile);
     }
 
     private function unsetSourceInstall(string $packageName): void
     {
-        $preferredInstallChanged = $this->config->load($this->configFile)->getPreferredInstallChanged();
+        $config = $this->config->load($this->configFile);
+        $packages = $config->getPreferredInstallChanged();
+        $preferredInstall = $config->getPreferredInstall();
 
-        if (!$preferredInstallChanged->has($packageName)) {
+        if (!$packages->has($packageName)) {
             // source was not set by this package, skip removal
             return;
         }
 
-        $this->configSource->removeConfigSetting(
-            'preferred-install.' . $packageName
-        );
+        $preferredInstall->remove($packageName);
+
+        $this->config->save($this->configFile);
 
         $this->removePreferredInstallChanged($packageName);
     }
@@ -308,7 +297,7 @@ final class ComposerUtils
 
         $changes->remove($numericId);
 
-        $this->config->save($this->configSource);
+        $this->config->save($this->configFile);
     }
 
     /**

@@ -76,7 +76,11 @@ final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
     /**
      * @inheritDoc
      *
-     * @return array<string, array<array{0: string, 1?: int}|int|string>|string>
+     * @return array{
+     *     pre-operations-exec: int[]|string[],
+     *     post-install-cmd: int[]|string[],
+     *     post-update-cmd: int[]|string[]
+     * }
      */
     public static function getSubscribedEvents(): array
     {

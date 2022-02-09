@@ -11,17 +11,16 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace GsTYPO3\CorePatches\Config;
+namespace GsTYPO3\CorePatches\Config\Changes;
 
+use GsTYPO3\CorePatches\Config;
+use GsTYPO3\CorePatches\Config\ConfigAwareInterface;
+use GsTYPO3\CorePatches\Config\Packages;
+use GsTYPO3\CorePatches\Config\PersistenceInterface;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 
-final class Change implements PersistenceInterface
+final class Change implements ConfigAwareInterface, PersistenceInterface
 {
-    /**
-     * @var string
-     */
-    private const NUMBER = 'number';
-
     /**
      * @var string
      */
@@ -42,6 +41,8 @@ final class Change implements PersistenceInterface
      */
     private const PATCH_DIR = 'patch-directory';
 
+    private Config $config;
+
     private int $number;
 
     private int $revision;
@@ -56,16 +57,23 @@ final class Change implements PersistenceInterface
      * @param iterable<int, string> $packages
      */
     public function __construct(
+        Config $config,
         int $number,
         iterable $packages = [],
         bool $tests = false,
         string $patchDirectory = '',
         int $revision = -1
     ) {
+        $this->config = $config;
         $this->number = $number;
         $this->revision = $revision;
-        $this->packages = new Packages($packages);
+        $this->packages = new Packages($this->config, $packages);
         $this->tests = $tests;
+
+        if ($patchDirectory === $this->config->getPatchDirectory()) {
+            $patchDirectory = '';
+        }
+
         $this->patchDirectory = $patchDirectory;
     }
 
@@ -91,20 +99,32 @@ final class Change implements PersistenceInterface
 
     public function getPatchDirectory(): string
     {
+        if ($this->patchDirectory === '') {
+            return $this->config->getPatchDirectory();
+        }
+
         return $this->patchDirectory;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getConfig(): Config
+    {
+        return $this->config;
     }
 
     /**
      * Returns a representation that can be natively converted to JSON, which is
      * called when invoking json_encode.
      *
-     * @return mixed[]
+     * @return array{revision?: int, packages: string[], tests?: true, patch-directory?: string}
      *
      * @see \JsonSerializable
      */
     public function jsonSerialize(): array
     {
-        $array = [self::NUMBER => $this->number];
+        $array = [];
 
         if ($this->revision > -1) {
             $array[self::REVISION] = $this->revision;
@@ -128,12 +148,6 @@ final class Change implements PersistenceInterface
      */
     public function jsonUnserialize(array $json): self
     {
-        if (!is_int($number = $json[self::NUMBER] ?? null)) {
-            throw new UnexpectedValueException(sprintf('Number "%s" is not numeric or missing.', gettype($number)));
-        }
-
-        $this->number = $number;
-
         if (!is_int($revision = $json[self::REVISION] ?? null)) {
             $revision = -1;
         }
