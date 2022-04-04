@@ -13,27 +13,35 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches\Tests\Unit\Config;
 
+use GsTYPO3\CorePatches\Config;
 use GsTYPO3\CorePatches\Config\Packages;
+use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 use GsTYPO3\CorePatches\Tests\Unit\TestCase;
 
 final class PackagesTest extends TestCase
 {
     public function testItemsAreAddedDuringConstruction(): void
     {
-        self::assertCount(3, new Packages(['package1', 'package2', 'package3']));
+        $config = new Config();
+
+        self::assertCount(3, new Packages($config, ['package1', 'package2', 'package3']));
     }
 
     public function testItemsAreReordered(): void
     {
+        $config = new Config();
+
         self::assertSame(
             ['package1', 'package2', 'package3'],
-            (new Packages(['package3', 'package2', 'package1']))->jsonSerialize()
+            (new Packages($config, ['package3', 'package2', 'package1']))->jsonSerialize()
         );
     }
 
     public function testHasAndFind(): void
     {
-        $packages = new Packages(['package']);
+        $config = new Config();
+
+        $packages = new Packages($config, ['package']);
 
         self::assertTrue($packages->has('package'));
         self::assertFalse($packages->has('invalid-package'));
@@ -41,16 +49,20 @@ final class PackagesTest extends TestCase
 
     public function testIsEmpty(): void
     {
-        self::assertTrue((new Packages([]))->isEmpty());
-        self::assertFalse((new Packages(['package']))->isEmpty());
+        $config = new Config();
+
+        self::assertTrue((new Packages($config))->isEmpty());
+        self::assertFalse((new Packages($config, ['package']))->isEmpty());
     }
 
     public function testRemove(): void
     {
-        self::assertNull((new Packages([]))->remove('invalid-package'));
-        self::assertSame('package', (new Packages(['package']))->remove('package'));
+        $config = new Config();
 
-        $packages = new Packages(['package3', 'package2', 'package1']);
+        self::assertNull((new Packages($config))->remove('invalid-package'));
+        self::assertSame('package', (new Packages($config, ['package']))->remove('package'));
+
+        $packages = new Packages($config, ['package3', 'package2', 'package1']);
 
         self::assertSame('package2', $packages->remove('package2'));
         self::assertSame(
@@ -65,17 +77,31 @@ final class PackagesTest extends TestCase
         );
     }
 
+    public function testGetConfig(): void
+    {
+        $config = new Config();
+
+        self::assertSame(
+            $config,
+            (new Packages($config))->getConfig()
+        );
+    }
+
     public function testJsonSerialize(): void
     {
+        $config = new Config();
+
         self::assertSame(
             ['package1', 'package2', 'package3'],
-            (new Packages(['package3', 'package2', 'package1']))->jsonSerialize()
+            (new Packages($config, ['package3', 'package2', 'package1']))->jsonSerialize()
         );
     }
 
     public function testJsonUnserialize(): void
     {
-        $packages = new Packages();
+        $config = new Config();
+
+        $packages = new Packages($config);
 
         self::assertSame(
             ['package1', 'package2', 'package3'],
@@ -91,5 +117,14 @@ final class PackagesTest extends TestCase
             $packages,
             $packages->jsonUnserialize(['package'])
         );
+    }
+
+    public function testJsonUnserializeThrowsOnInvalidType(): void
+    {
+        $config = new Config();
+
+        $this->expectException(UnexpectedValueException::class);
+        $this->expectExceptionMessage('Package is not a string (1).');
+        (new Packages($config))->jsonUnserialize([1]);
     }
 }

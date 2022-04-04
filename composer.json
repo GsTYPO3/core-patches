@@ -84,7 +84,7 @@
 			"@composer require composer/composer:* composer/semver:* symfony/console:* --ansi --no-interaction --no-progress",
 			"composer-require-checker",
 			"@composer remove composer/semver symfony/console --ansi --no-interaction --no-progress --no-update",
-			"@composer require composer/composer:^2.0 --ansi --no-interaction --no-progress --dev"
+			"@composer require composer/composer:^2.0.9 --ansi --no-interaction --no-progress --dev"
 		],
 		"ci:composer:validate": "@composer validate --strict",
 		"ci:dynamic": [
@@ -129,7 +129,7 @@
 		"ci:yaml:lint": "yaml-lint .ddev .github",
 		"clean": [
 			"@tools:setup:clean",
-			"rm -fr vendor .php-cs-fixer.cache .phplint-cache composer.lock"
+			"rm -fr var vendor .php-cs-fixer.cache .phplint-cache composer.lock"
 		],
 		"fix": [
 			"@fix:composer",
@@ -175,11 +175,11 @@
 			"mkdir -p .build/project",
 			"cp tests/project/composer.json .build/project/composer.json",
 			"@composer install -d.build/project --ansi",
-			".build/project/vendor/bin/composer update -d.build/project --ansi --no-interaction"
+			".build/project/vendor/bin/composer update -d.build/project --ansi --no-interaction --no-progress"
 		],
 		"test:typo3:patch:setup:update": [
-			".build/project/vendor/bin/composer require 'typo3/cms-core:^10.4 || ^11.5' -d.build/project --ansi --no-interaction",
-			".build/project/vendor/bin/composer update -d.build/project --ansi --no-interaction"
+			".build/project/vendor/bin/composer require 'typo3/cms-core:^10.4 || ^11.5' -d.build/project --ansi --no-interaction --no-progress",
+			".build/project/vendor/bin/composer update -d.build/project --ansi --no-interaction --no-progress"
 		],
 		"test:typo3:patch:update": [
 			".build/project/vendor/bin/composer typo3:patch:update -d.build/project --ansi --no-interaction",
@@ -188,7 +188,8 @@
 			".build/project/vendor/bin/composer validate -d.build/project --ansi"
 		],
 		"tools": [
-			"@tools:static"
+			"@tools:static",
+			"@tools:dynamic"
 		],
 		"tools:composer": [
 			"@tools:composer:normalize",
@@ -245,7 +246,10 @@
 			"@composer test:typo3:patch:setup:update",
 			"@composer test:typo3:patch:remove"
 		],
-		"tools:tests:unit": "@php phpunit -c tests/Unit/phpunit.xml",
+		"tools:tests:unit": [
+			"(test -d var/tests && rm -fr var/tests) || true",
+			"@php phpunit -c tests/Unit/phpunit.xml"
+		],
 		"tools:yaml:lint": "yaml-lint .ddev .github"
 	}
 }

@@ -34,8 +34,6 @@ abstract class TestCase extends BaseTestCase
 
     public static function setUpBeforeClass(): void
     {
-        parent::setUpBeforeClass();
-
         self::$rootPath = dirname(__DIR__, 2);
         self::$fixturePath = __DIR__ . '/Fixtures';
         self::$testPath = self::$rootPath . '/var/tests';
@@ -55,8 +53,6 @@ abstract class TestCase extends BaseTestCase
         if (self::$filesystem->exists(self::$testPath)) {
             //$this->filesystem->remove(self::$testPath);
         }
-
-        parent::tearDown();
     }
 
     protected static function getRootPath(): string

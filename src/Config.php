@@ -18,9 +18,22 @@ use Composer\Factory;
 use Composer\Json\JsonFile;
 use GsTYPO3\CorePatches\Config\Changes;
 use GsTYPO3\CorePatches\Config\Packages;
+use GsTYPO3\CorePatches\Config\Patches;
+use GsTYPO3\CorePatches\Config\PersistenceInterface;
+use GsTYPO3\CorePatches\Config\PreferredInstall;
 
-final class Config
+final class Config implements PersistenceInterface
 {
+    /**
+     * @var string
+     */
+    private const CONFIG = 'config';
+
+    /**
+     * @var string
+     */
+    private const CONFIG_PREFERRED_INSTALL = 'preferred-install';
+
     /**
      * @var string
      */
@@ -29,7 +42,12 @@ final class Config
     /**
      * @var string
      */
-    private const PACKAGE = 'gilbertsoft/typo3-core-patches';
+    private const EXTRA_PATCHES = 'patches';
+
+    /**
+     * @var string
+     */
+    private const EXTRA_PLUGIN = 'gilbertsoft/typo3-core-patches';
 
     /**
      * @var string
@@ -44,7 +62,7 @@ final class Config
     /**
      * @var string
      */
-    private const PATCH_DIR = 'patch-directory';
+    private const PATCH_DIRECTORY = 'patch-directory';
 
     private Changes $changes;
 
@@ -52,10 +70,16 @@ final class Config
 
     private string $patchDirectory = '';
 
+    private PreferredInstall $preferredInstall;
+
+    private Patches $patches;
+
     public function __construct()
     {
-        $this->changes = new Changes();
-        $this->preferredInstallChanged = new Packages();
+        $this->changes = new Changes($this);
+        $this->preferredInstallChanged = new Packages($this);
+        $this->preferredInstall = new PreferredInstall($this);
+        $this->patches = new Patches($this);
     }
 
     public function getChanges(): Changes
@@ -84,21 +108,153 @@ final class Config
         return $this;
     }
 
+    public function getPreferredInstall(): PreferredInstall
+    {
+        return $this->preferredInstall;
+    }
+
+    public function getPatches(): Patches
+    {
+        return $this->patches;
+    }
+
+    private function isEmpty(): bool
+    {
+        /** @noRector \Rector\EarlyReturn\Rector */
+        return $this->changes->isEmpty()
+            && $this->preferredInstallChanged->isEmpty()
+            && $this->patchDirectory === ''
+        ;
+    }
+
     public function load(?JsonFile $jsonFile = null): self
     {
         if ($jsonFile === null) {
             $jsonFile = new JsonFile(Factory::getComposerFile());
         }
 
-        $config = $jsonFile->read();
+        if (!is_array($config = $jsonFile->read())) {
+            $config = [];
+        }
 
-        if (
-            is_array($config)
-            && is_array($config[self::EXTRA] ?? null)
-            && is_array($config[self::EXTRA][self::PACKAGE] ?? null)
-        ) {
-            $packageConfig = $config[self::EXTRA][self::PACKAGE];
+        $this->jsonUnserialize($config);
+
+        return $this;
+    }
+
+    public function save(?JsonFile $jsonFile = null): self
+    {
+        if ($jsonFile === null) {
+            $jsonFile = new JsonFile(Factory::getComposerFile());
+        }
+
+        $jsonConfigSource = new JsonConfigSource($jsonFile);
+
+        // Save preferred-install
+        foreach ($this->preferredInstall as $packageName => $installMethod) {
+            $name = sprintf(
+                '%s.%s',
+                self::CONFIG_PREFERRED_INSTALL,
+                $packageName
+            );
+
+            if ($installMethod === '') {
+                $jsonConfigSource->removeConfigSetting($name);
+            } else {
+                $jsonConfigSource->addConfigSetting($name, $installMethod);
+            }
+        }
+
+        // Save patches
+        $name = sprintf(
+            '%s.%s',
+            self::EXTRA,
+            self::EXTRA_PATCHES
+        );
+
+        if ($this->patches->isEmpty()) {
+            $jsonConfigSource->removeProperty($name);
         } else {
+            $jsonConfigSource->addProperty($name, $this->patches);
+        }
+
+        // Save plugin configuration
+        $name = sprintf(
+            '%s.%s',
+            self::EXTRA,
+            self::EXTRA_PLUGIN
+        );
+
+        if ($this->isEmpty()) {
+            $jsonConfigSource->removeProperty($name);
+        } else {
+            $jsonConfigSource->addProperty($name, $this);
+        }
+
+        // Rewrite configuration to enforce correct formating
+        if (is_array($rawConfig = $jsonFile->read())) {
+            $jsonFile->write($rawConfig);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Returns a representation that can be natively converted to JSON, which is
+     * called when invoking json_encode.
+     *
+     * @return mixed[]
+     *
+     * @see \JsonSerializable
+     */
+    public function jsonSerialize(): array
+    {
+        $config = [];
+
+        if (!$this->changes->isEmpty()) {
+            $config[self::CHANGES] = $this->changes;
+        }
+
+        if (!$this->preferredInstallChanged->isEmpty()) {
+            $config[self::PREFERRED_INSTALL_CHANGED] = $this->preferredInstallChanged;
+        }
+
+        if ($this->patchDirectory !== '') {
+            $config[self::PATCH_DIRECTORY] = $this->patchDirectory;
+        }
+
+        return $config;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function jsonUnserialize(array $json): self
+    {
+        if (!is_array($config = $json[self::CONFIG] ?? null)) {
+            $config = [];
+        }
+
+        if (!is_array($extra = $json[self::EXTRA] ?? null)) {
+            $extra = [];
+        }
+
+        // Load preferred-install
+        if (!is_array($preferredInstall = $config[self::CONFIG_PREFERRED_INSTALL] ?? null)) {
+            $preferredInstall = [];
+        }
+
+        $this->preferredInstall->jsonUnserialize($preferredInstall);
+
+        // Load patches
+        if (!is_array($patches = $extra[self::EXTRA_PATCHES] ?? null)) {
+            $patches = [];
+        }
+
+        $this->patches->jsonUnserialize($patches);
+
+        // Load plugin configuration
+        if (!is_array($packageConfig = $extra[self::EXTRA_PLUGIN] ?? null)) {
             $packageConfig = [];
         }
 
@@ -114,95 +270,11 @@ final class Config
 
         $this->preferredInstallChanged->jsonUnserialize($preferredInstallChanged);
 
-        if (!is_string($patchDirectory = $packageConfig[self::PATCH_DIR] ?? null)) {
+        if (!is_string($patchDirectory = $packageConfig[self::PATCH_DIRECTORY] ?? null)) {
             $patchDirectory = '';
         }
 
         $this->patchDirectory = $patchDirectory;
-
-        return $this;
-    }
-
-    public function save(JsonConfigSource $jsonConfigSource): self
-    {
-        if (
-            $this->changes->isEmpty()
-            && $this->preferredInstallChanged->isEmpty()
-            && $this->patchDirectory === ''
-        ) {
-            $jsonConfigSource->removeProperty(
-                sprintf(
-                    '%s.%s',
-                    self::EXTRA,
-                    self::PACKAGE
-                )
-            );
-
-            return $this;
-        }
-
-        if (!$this->changes->isEmpty()) {
-            $jsonConfigSource->addProperty(
-                sprintf(
-                    '%s.%s.%s',
-                    self::EXTRA,
-                    self::PACKAGE,
-                    self::CHANGES
-                ),
-                $this->changes->jsonSerialize()
-            );
-        } else {
-            $jsonConfigSource->removeProperty(
-                sprintf(
-                    '%s.%s.%s',
-                    self::EXTRA,
-                    self::PACKAGE,
-                    self::CHANGES
-                )
-            );
-        }
-
-        if (!$this->preferredInstallChanged->isEmpty()) {
-            $jsonConfigSource->addProperty(
-                sprintf(
-                    '%s.%s.%s',
-                    self::EXTRA,
-                    self::PACKAGE,
-                    self::PREFERRED_INSTALL_CHANGED
-                ),
-                $this->preferredInstallChanged->jsonSerialize()
-            );
-        } else {
-            $jsonConfigSource->removeProperty(
-                sprintf(
-                    '%s.%s.%s',
-                    self::EXTRA,
-                    self::PACKAGE,
-                    self::PREFERRED_INSTALL_CHANGED
-                )
-            );
-        }
-
-        if ($this->patchDirectory !== '') {
-            $jsonConfigSource->addProperty(
-                sprintf(
-                    '%s.%s.%s',
-                    self::EXTRA,
-                    self::PACKAGE,
-                    self::PATCH_DIR
-                ),
-                $this->patchDirectory
-            );
-        } else {
-            $jsonConfigSource->removeProperty(
-                sprintf(
-                    '%s.%s.%s',
-                    self::EXTRA,
-                    self::PACKAGE,
-                    self::PATCH_DIR
-                )
-            );
-        }
 
         return $this;
     }

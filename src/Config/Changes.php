@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches\Config;
 
+use GsTYPO3\CorePatches\Config;
+use GsTYPO3\CorePatches\Config\Changes\Change;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 use Iterator;
 use IteratorAggregate;
@@ -20,8 +22,10 @@ use IteratorAggregate;
 /**
  * @implements IteratorAggregate<int, Change>
  */
-final class Changes implements PersistenceInterface, IteratorAggregate
+final class Changes implements ConfigAwareInterface, PersistenceInterface, IteratorAggregate
 {
+    private Config $config;
+
     /**
      * @var array<int, Change>
      */
@@ -30,8 +34,12 @@ final class Changes implements PersistenceInterface, IteratorAggregate
     /**
      * @param iterable<int, Change> $values
      */
-    public function __construct(iterable $values = [])
-    {
+    public function __construct(
+        Config $config,
+        iterable $values = []
+    ) {
+        $this->config = $config;
+
         foreach ($values as $value) {
             $this->put($value->getNumber(), $value);
         }
@@ -47,7 +55,7 @@ final class Changes implements PersistenceInterface, IteratorAggregate
         string $patchDirectory = '',
         int $revision = -1
     ): Change {
-        $change = new Change($number, $packages, $tests, $patchDirectory, $revision);
+        $change = new Change($this->config, $number, $packages, $tests, $patchDirectory, $revision);
 
         $this->put($change->getNumber(), $change);
 
@@ -61,12 +69,12 @@ final class Changes implements PersistenceInterface, IteratorAggregate
         ksort($this->changes);
     }
 
-    private function find(int $number): int
+    private function find(int $needle): int
     {
         $index = 0;
 
         foreach ($this->changes as $change) {
-            if ($change->getNumber() === $number) {
+            if ($change->getNumber() === $needle) {
                 break;
             }
 
@@ -92,6 +100,14 @@ final class Changes implements PersistenceInterface, IteratorAggregate
     }
 
     /**
+     * @inheritDoc
+     */
+    public function getConfig(): Config
+    {
+        return $this->config;
+    }
+
+    /**
      * Returns a representation that can be natively converted to JSON, which is
      * called when invoking json_encode.
      *
@@ -104,7 +120,7 @@ final class Changes implements PersistenceInterface, IteratorAggregate
         $changes = [];
 
         foreach ($this->changes as $number => $change) {
-            $changes[$number] = $change->jsonSerialize();
+            $changes[$number] = $change;
         }
 
         return $changes;
@@ -117,17 +133,17 @@ final class Changes implements PersistenceInterface, IteratorAggregate
     {
         $this->changes = [];
 
-        foreach ($json as $singleJson) {
+        foreach ($json as $changeNumber => $changeConfig) {
             // For BC only
-            if (is_int($singleJson)) {
-                $change = new Change($singleJson);
+            if (is_int($changeConfig)) {
+                $change = new Change($this->config, $changeConfig);
             } else {
-                if (!is_array($singleJson)) {
-                    throw new UnexpectedValueException(sprintf('Change is not an array (%s).', gettype($singleJson)));
+                if (!is_array($changeConfig)) {
+                    throw new UnexpectedValueException(sprintf('Change is not an array (%s).', gettype($changeConfig)));
                 }
 
-                $change = new Change(0);
-                $change->jsonUnserialize($singleJson);
+                $change = new Change($this->config, $changeNumber);
+                $change->jsonUnserialize($changeConfig);
             }
 
             $this->put($change->getNumber(), $change);
