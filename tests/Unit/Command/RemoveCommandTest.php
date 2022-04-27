@@ -25,7 +25,7 @@ final class RemoveCommandTest extends CommandTestCase
     }
 
     /**
-     * @param  array<int, string>                       $changeIds
+     * @param  array<int, string>|null                  $changeIds
      * @param  array<string, string|string[]|bool|null> $input
      * @return array<string, string|string[]|bool|null>
      */
