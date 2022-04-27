@@ -7,7 +7,6 @@
 
 # Files
 /.* export-ignore
-/CODE_OF_CONDUCT.md export-ignore
 /phpstan.neon export-ignore
 /rector.php export-ignore
 .gitkeep export-ignore
