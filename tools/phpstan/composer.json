@@ -8,6 +8,9 @@
 		"phpstan/phpstan-symfony": "*",
 		"rector/rector": "*"
 	},
+	"conflict": {
+		"phpstan/phpstan-strict-rules": "1.2.0"
+	},
 	"config": {
 		"allow-plugins": {
 			"phpstan/extension-installer": true
