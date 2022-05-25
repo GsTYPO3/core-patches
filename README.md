@@ -134,7 +134,8 @@ see <https://getcomposer.org/doc/06-config.md#discard-changes>. Run e.g.
 Bug reports, feature requests and pull requests are welcome in the [GitHub
 repository](https://github.com/GsTYPO3/core-patches).
 
-For support questions or other discussions please use the [GitHub Discussions](https://github.com/GsTYPO3/core-patches/discussions).
+For support questions or other discussions please use the [GitHub Discussions](https://github.com/GsTYPO3/core-patches/discussions)
+or join the dedicated [TYPO3 Slack channel](https://typo3.slack.com/archives/C03GY4LEVPU).
 
 ## License
 
