@@ -143,7 +143,7 @@ final class RestApi
         // Support for full review URLs
         if (
             preg_match(
-                '#^' . preg_quote(self::REST_API, '#') . 'c/Packages/TYPO3.CMS/\+/(\d+)#',
+                '#^' . preg_quote(self::REST_API, '#') . '/c/Packages/TYPO3.CMS/\+/(\d+)#',
                 $changeId,
                 $matches
             ) === 1
