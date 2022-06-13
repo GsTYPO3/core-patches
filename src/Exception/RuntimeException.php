@@ -11,6 +11,9 @@
 
 namespace GsTYPO3\CorePatches\Exception;
 
+/**
+ * @noRector \Rector\Privatization\Rector\Class_\FinalizeClassesWithoutChildrenRector
+ */
 class RuntimeException extends \RuntimeException implements ExceptionInterface
 {
 }
