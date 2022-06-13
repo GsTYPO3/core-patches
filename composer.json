@@ -107,6 +107,7 @@
 		"ci:php:stan": "phpstan analyse --no-progress",
 		"ci:static": [
 			"@ci:composer",
+			"@ci:yaml:lint",
 			"@ci:php"
 		],
 		"ci:tests": [
@@ -227,8 +228,8 @@
 		"tools:setup:update": "@composer bin all update --ansi",
 		"tools:static": [
 			"@tools:composer",
-			"@tools:php",
-			"@tools:yaml:lint"
+			"@tools:yaml:lint",
+			"@tools:php"
 		],
 		"tools:tests": [
 			"@tools:tests:unit",
