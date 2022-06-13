@@ -13,18 +13,18 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches\Tests\Unit\Config\Patches;
 
-use GsTYPO3\CorePatches\Config;
 use GsTYPO3\CorePatches\Config\Patches\PackagePatches;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 use GsTYPO3\CorePatches\Tests\Unit\TestCase;
 
+/**
+ * @ covers \GsTYPO3\CorePatches\Config\Patches\PackagePatches
+ */
 final class PackagePatchesTest extends TestCase
 {
     public function testItemsAreAddedDuringConstruction(): void
     {
-        $config = new Config();
-
-        self::assertCount(3, new PackagePatches($config, [
+        self::assertCount(3, new PackagePatches([
             'description1' => 'patch1',
             'description2' => 'patch2',
             'description3' => 'patch3',
@@ -33,15 +33,13 @@ final class PackagePatchesTest extends TestCase
 
     public function testItemsAreReordered(): void
     {
-        $config = new Config();
-
         self::assertSame(
             [
                 'description1' => 'patch1',
                 'description2' => 'patch2',
                 'description3' => 'patch3',
             ],
-            (new PackagePatches($config, [
+            (new PackagePatches([
                 'description3' => 'patch3',
                 'description2' => 'patch2',
                 'description1' => 'patch1',
@@ -51,22 +49,18 @@ final class PackagePatchesTest extends TestCase
 
     public function testIsEmpty(): void
     {
-        $config = new Config();
-
-        self::assertTrue((new PackagePatches($config))->isEmpty());
-        self::assertFalse((new PackagePatches($config, ['description' => 'patch']))->isEmpty());
+        self::assertTrue((new PackagePatches())->isEmpty());
+        self::assertFalse((new PackagePatches(['description' => 'patch']))->isEmpty());
     }
 
     public function testRemove(): void
     {
-        $config = new Config();
-
-        self::assertNull((new PackagePatches($config))->remove('invalid-description'));
-        self::assertSame('patch', (new PackagePatches($config, [
+        self::assertNull((new PackagePatches())->remove('invalid-description'));
+        self::assertSame('patch', (new PackagePatches([
             'description' => 'patch',
         ]))->remove('description'));
 
-        $packagePatches = new PackagePatches($config, [
+        $packagePatches = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
@@ -90,27 +84,15 @@ final class PackagePatchesTest extends TestCase
         );
     }
 
-    public function testGetConfig(): void
-    {
-        $config = new Config();
-
-        self::assertSame(
-            $config,
-            (new PackagePatches($config))->getConfig()
-        );
-    }
-
     public function testJsonSerialize(): void
     {
-        $config = new Config();
-
         self::assertSame(
             [
                 'description1' => 'patch1',
                 'description2' => 'patch2',
                 'description3' => 'patch3',
             ],
-            (new PackagePatches($config, [
+            (new PackagePatches([
                 'description3' => 'patch3',
                 'description2' => 'patch2',
                 'description1' => 'patch1',
@@ -120,9 +102,7 @@ final class PackagePatchesTest extends TestCase
 
     public function testJsonUnserialize(): void
     {
-        $config = new Config();
-
-        $packagePatches = new PackagePatches($config);
+        $packagePatches = new PackagePatches();
 
         self::assertSame(
             [
@@ -150,19 +130,38 @@ final class PackagePatchesTest extends TestCase
 
     public function testJsonUnserializeThrowsOnInvalidDescriptionType(): void
     {
-        $config = new Config();
-
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('Description is not a string (1).');
-        (new PackagePatches($config))->jsonUnserialize([1 => 'patch']);
+        (new PackagePatches())->jsonUnserialize([1 => 'patch']);
     }
 
     public function testJsonUnserializeThrowsOnInvalidPatchType(): void
     {
-        $config = new Config();
-
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('Patch is not a string (1).');
-        (new PackagePatches($config))->jsonUnserialize(['description' => 1]);
+        (new PackagePatches())->jsonUnserialize(['description' => 1]);
+    }
+
+    public function testIterator(): void
+    {
+        $packagePatches = new PackagePatches([
+            'description3' => 'patch3',
+            'description2' => 'patch2',
+            'description1' => 'patch1',
+        ]);
+
+        $patches = [];
+        foreach ($packagePatches as $description => $patch) {
+            $patches[$description] = $patch;
+        }
+
+        self::assertSame(
+            [
+                'description1' => 'patch1',
+                'description2' => 'patch2',
+                'description3' => 'patch3',
+            ],
+            $patches
+        );
     }
 }

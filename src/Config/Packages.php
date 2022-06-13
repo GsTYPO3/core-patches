@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches\Config;
 
-use GsTYPO3\CorePatches\Config;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 use Iterator;
 use IteratorAggregate;
@@ -21,10 +20,8 @@ use IteratorAggregate;
 /**
  * @implements IteratorAggregate<int, string>
  */
-final class Packages implements ConfigAwareInterface, PersistenceInterface, IteratorAggregate
+final class Packages implements PersistenceInterface, IteratorAggregate
 {
-    private Config $config;
-
     /**
      * @var array<int, string>
      */
@@ -34,11 +31,8 @@ final class Packages implements ConfigAwareInterface, PersistenceInterface, Iter
      * @param iterable<int, string> $packages
      */
     public function __construct(
-        Config $config,
         iterable $packages = []
     ) {
-        $this->config = $config;
-
         foreach ($packages as $package) {
             $this->add($package);
         }
@@ -75,14 +69,6 @@ final class Packages implements ConfigAwareInterface, PersistenceInterface, Iter
     public function remove(string $package): ?string
     {
         return ($index = $this->find($package)) > -1 ? array_splice($this->packages, $index, 1)[0] : null;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getConfig(): Config
-    {
-        return $this->config;
     }
 
     /**
