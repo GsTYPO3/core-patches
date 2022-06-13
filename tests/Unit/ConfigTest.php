@@ -59,6 +59,7 @@ final class ConfigTest extends TestCase
         self::assertCount($expectedAppliedChangesCount, $config->getChanges());
         self::assertCount($expectedPreferredInstallChangedCount, $config->getPreferredInstallChanged());
         self::assertSame($expectedPatchDirectory, $config->getPatchDirectory());
+        self::assertSame($expectedIgnoreBranch, $config->getIgnoreBranch());
     }
 
     /**
@@ -113,6 +114,7 @@ final class ConfigTest extends TestCase
                         ],
                         'preferred-install-changed' => ['package1', 'package2'],
                         'patch-directory' => 'patch-dir',
+                        'ignore-branch' => true,
                     ],
                 ],
             ],
@@ -399,6 +401,7 @@ final class ConfigTest extends TestCase
                             3 => 'package3',
                         ],
                         'patch-directory' => 'patch-dir',
+                        'ignore-branch' => true,
                     ],
                 ],
             ],
@@ -443,6 +446,7 @@ final class ConfigTest extends TestCase
                             2 => 'package3',
                         ],
                         'patch-directory' => 'patch-dir',
+                        'ignore-branch' => true,
                     ],
                 ],
             ],
@@ -488,6 +492,9 @@ final class ConfigTest extends TestCase
         self::assertSame('patch-dir', $config->getPatchDirectory());
 
         self::assertSame($config->getPreferredInstall(), $config->getPreferredInstall());
+
+        self::assertSame($config, $config->setIgnoreBranch(true));
+        self::assertTrue($config->getIgnoreBranch());
 
         self::assertSame($config->getPatches(), $config->getPatches());
     }

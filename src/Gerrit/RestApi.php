@@ -69,6 +69,14 @@ final class RestApi
     }
 
     /**
+     * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-id
+     */
+    public function getBranch(string $changeId): string
+    {
+        return $this->getChange($changeId)->branch;
+    }
+
+    /**
      * @return string                   The normalized subject
      * @throws UnexpectedValueException
      *

@@ -22,6 +22,8 @@ final class ChangeInfo extends AbstractEntity
 {
     public string $id = '';
 
+    public string $branch = '';
+
     public string $changeId = '';
 
     public string $subject = '';
@@ -34,6 +36,7 @@ final class ChangeInfo extends AbstractEntity
         $self = new self();
 
         self::assignProperty($self->id, $object, 'id');
+        self::assignProperty($self->branch, $object, 'branch');
         self::assignProperty($self->changeId, $object, 'change_id');
         self::assignProperty($self->subject, $object, 'subject');
         self::assignProperty($self->number, $object, '_number');

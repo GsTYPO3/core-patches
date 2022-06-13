@@ -19,8 +19,10 @@ use Composer\DependencyResolver\Operation\UninstallOperation;
 use Composer\Factory;
 use Composer\IO\IOInterface;
 use Composer\Json\JsonFile;
+use Composer\Package\BasePackage;
 use Composer\Package\PackageInterface;
 use Composer\Semver\Semver;
+use Composer\Semver\VersionParser;
 use GsTYPO3\CorePatches\Config;
 use GsTYPO3\CorePatches\Config\Patches;
 use GsTYPO3\CorePatches\Config\PreferredInstall;
@@ -48,13 +50,16 @@ final class ComposerUtils
 
     private PatchUtils $patchUtils;
 
+    private VersionParser $versionParser;
+
     public function __construct(
         Composer $composer,
         IOInterface $io,
         ?Config $config = null,
         ?Application $application = null,
         ?RestApi $restApi = null,
-        ?PatchUtils $patchUtils = null
+        ?PatchUtils $patchUtils = null,
+        ?VersionParser $versionParser = null
     ) {
         $this->composer = $composer;
         $this->io = $io;
@@ -71,6 +76,7 @@ final class ComposerUtils
 
         $this->gerritRestApi = $restApi ?? new RestApi($httpDownloader);
         $this->patchUtils = $patchUtils ?? new PatchUtils($this->composer, $this->io);
+        $this->versionParser = $versionParser ?? new VersionParser();
     }
 
     /**
@@ -162,12 +168,24 @@ final class ComposerUtils
 
                 $numericId = $this->gerritRestApi->getNumericId($changeId);
                 $this->io->write(sprintf('  - Numeric ID is <comment>%s</comment>', $numericId));
+
+                $branch = $this->gerritRestApi->getBranch($changeId);
+                $this->io->write(sprintf('  - Branch is <comment>%s</comment>', $branch));
             } catch (UnexpectedResponseException | InvalidResponseException | UnexpectedValueException $th) {
                 $this->io->writeError('<warning>Error getting change from Gerrit</warning>');
                 $this->io->writeError(sprintf(
                     '<warning>%s</warning>',
                     $th->getMessage()
                 ), true, IOInterface::VERBOSE);
+
+                continue;
+            }
+
+            if (!$this->checkBranch($numericId, $branch)) {
+                $this->io->writeError(sprintf(
+                    '<warning>Skipping change %s not matching the installed branch</warning>',
+                    $numericId
+                ));
 
                 continue;
             }
@@ -205,6 +223,33 @@ final class ComposerUtils
         }
 
         return $patchesCount;
+    }
+
+    private function checkBranch(int $changeId, string $targetBranch): bool
+    {
+        if ($this->config->load()->getIgnoreBranch()) {
+            return true;
+        }
+
+        if (
+            !$this->composer->getRepositoryManager()->getLocalRepository()->findPackage(
+                'typo3/cms-core',
+                $this->versionParser->normalizeBranch($targetBranch)
+            ) instanceof BasePackage
+        ) {
+            return $this->io->askConfirmation(
+                sprintf(
+                    '<info>The change %d is related to the branch "%s" but another version appears to be installed.' .
+                    ' Applying the patch may result in errors afterwards. Should the patch for this change be' .
+                    ' installed anyway?</info> [<comment>y,N</comment>] ',
+                    $changeId,
+                    $targetBranch
+                ),
+                false
+            );
+        }
+
+        return true;
     }
 
     private function setSourceInstall(string $packageName): void

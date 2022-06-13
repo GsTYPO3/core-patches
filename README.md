@@ -119,6 +119,18 @@ next example:
 composer typo3:patch:apply https://review.typo3.org/c/Packages/TYPO3.CMS/+/12345
 ```
 
+## Verification of the branch
+
+The plugin compares the current installed core version with the target branch
+of the patch to install and asks for confirmation to anyway try to apply the
+patch to the different version.
+
+To disabled the branch check for this project, run:
+
+```bash
+composer config extra.gilbertsoft/typo3-core-patches.ignore-branch true
+```
+
 ## Detection of merged changes on update or install
 
 When running `composer update` or `composer install`, the plugin detects changes
