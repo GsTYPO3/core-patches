@@ -11,41 +11,31 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-use Rector\Core\Configuration\Option;
-use Rector\Php74\Rector\Property\TypedPropertyRector;
+use Rector\Config\RectorConfig;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
-return static function (ContainerConfigurator $containerConfigurator): void {
-    // get parameters
-    $parameters = $containerConfigurator->parameters();
-    $parameters->set(Option::PATHS, [
+return static function (RectorConfig $rectorConfig): void {
+    $rectorConfig->paths([
         __DIR__ . '/src',
         __DIR__ . '/tests',
     ]);
 
-    $parameters->set(Option::BOOTSTRAP_FILES, [
+    $rectorConfig->bootstrapFiles([
         __DIR__ . '/vendor/autoload.php',
         __DIR__ . '/tools/phpunit/vendor/autoload.php',
     ]);
 
     // Define what rule sets will be applied
-    $containerConfigurator->import(LevelSetList::UP_TO_PHP_74);
-    $containerConfigurator->import(SetList::CODE_QUALITY);
-    $containerConfigurator->import(SetList::CODING_STYLE);
-    $containerConfigurator->import(SetList::DEAD_CODE);
-    $containerConfigurator->import(SetList::NAMING);
-    $containerConfigurator->import(SetList::PRIVATIZATION);
-    $containerConfigurator->import(SetList::PSR_4);
-    $containerConfigurator->import(SetList::TYPE_DECLARATION);
-    $containerConfigurator->import(SetList::TYPE_DECLARATION_STRICT);
-    $containerConfigurator->import(SetList::UNWRAP_COMPAT);
-    $containerConfigurator->import(SetList::EARLY_RETURN);
-
-    // get services (needed for register a single rule)
-    // $services = $containerConfigurator->services();
-
-    // register a single rule
-    // $services->set(TypedPropertyRector::class);
+    $rectorConfig->import(LevelSetList::UP_TO_PHP_74);
+    $rectorConfig->import(SetList::CODE_QUALITY);
+    $rectorConfig->import(SetList::CODING_STYLE);
+    $rectorConfig->import(SetList::DEAD_CODE);
+    $rectorConfig->import(SetList::NAMING);
+    $rectorConfig->import(SetList::PRIVATIZATION);
+    $rectorConfig->import(SetList::PSR_4);
+    $rectorConfig->import(SetList::TYPE_DECLARATION);
+    $rectorConfig->import(SetList::TYPE_DECLARATION_STRICT);
+    $rectorConfig->import(SetList::UNWRAP_COMPAT);
+    $rectorConfig->import(SetList::EARLY_RETURN);
 };
