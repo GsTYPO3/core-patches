@@ -21,7 +21,9 @@ use Composer\IO\IOInterface;
 use Composer\Json\JsonFile;
 use Composer\Package\PackageInterface;
 use Composer\Semver\Semver;
+use Composer\Semver\VersionParser;
 use GsTYPO3\CorePatches\Config;
+use GsTYPO3\CorePatches\Config\Patches;
 use GsTYPO3\CorePatches\Config\PreferredInstall;
 use GsTYPO3\CorePatches\Exception\CommandExecutionException;
 use GsTYPO3\CorePatches\Exception\InvalidResponseException;
@@ -35,18 +37,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 final class ComposerUtils
 {
-    /**
-     * @var string
-     */
-    private const EXTRA = 'extra';
-
     private Composer $composer;
 
     private IOInterface $io;
 
     private Config $config;
-
-    private JsonFile $configFile;
 
     private Application $application;
 
@@ -54,18 +49,20 @@ final class ComposerUtils
 
     private PatchUtils $patchUtils;
 
+    private VersionParser $versionParser;
+
     public function __construct(Composer $composer, IOInterface $io)
     {
         $this->composer = $composer;
         $this->io = $io;
 
-        $this->config = new Config();
-        $this->configFile = new JsonFile(Factory::getComposerFile(), null, $this->io);
+        $this->config = new Config(new JsonFile(Factory::getComposerFile(), null, $this->io));
         $this->application = new Application();
         $this->application->setAutoExit(false);
 
         $this->gerritRestApi = new RestApi(Factory::createHttpDownloader($this->io, $this->composer->getConfig()));
         $this->patchUtils = new PatchUtils($this->composer, $this->io);
+        $this->versionParser = new VersionParser();
     }
 
     /**
@@ -73,13 +70,13 @@ final class ComposerUtils
      */
     private function addPatchesToConfigFile(array $patches): void
     {
-        $configPatches = $this->config->load($this->configFile)->getPatches();
+        $configPatches = $this->config->load()->getPatches();
 
         foreach ($patches as $packgeName => $packagePatches) {
             $configPatches->add($packgeName, $packagePatches);
         }
 
-        $this->config->save($this->configFile);
+        $this->config->save();
     }
 
     /**
@@ -92,7 +89,12 @@ final class ComposerUtils
         string $destination = '',
         int $revision = -1
     ): void {
-        $changes = $this->config->load($this->configFile)->getChanges();
+        $changes = $this->config->load()->getChanges();
+
+        // Avoid saving the patch directory to the patches if default path is used.
+        if ($destination === $this->config->getPatchDirectory()) {
+            $destination = '';
+        }
 
         if ($changes->has($numericId)) {
             // the package is already listed, skip addition
@@ -101,52 +103,33 @@ final class ComposerUtils
 
         $changes->add($numericId, $packages, $includeTests, $destination, $revision);
 
-        $this->config->save($this->configFile);
+        $this->config->save();
     }
 
     private function addPreferredInstallChanged(string $packageName): void
     {
-        $preferredInstallChanged = $this->config->load($this->configFile)->getPreferredInstallChanged();
+        $packages = $this->config->load()->getPreferredInstallChanged();
 
-        if ($preferredInstallChanged->has($packageName)) {
+        if ($packages->has($packageName)) {
             // the package is already listed, skip addition
             return;
         }
 
-        $preferredInstallChanged->add($packageName);
-        $this->config->save($this->configFile);
+        $packages->add($packageName);
+        $this->config->save();
     }
 
     private function removePreferredInstallChanged(string $packageName): void
     {
-        $preferredInstallChanged = $this->config->load($this->configFile)->getPreferredInstallChanged();
+        $packages = $this->config->load()->getPreferredInstallChanged();
 
-        if (!$preferredInstallChanged->has($packageName)) {
+        if (!$packages->has($packageName)) {
             // the package is not listed, skip removal
             return;
         }
 
-        $preferredInstallChanged->remove($packageName);
-        $this->config->save($this->configFile);
-    }
-
-    /**
-     * @return array<string, array<string, string>>
-     */
-    private function getPatches(): array
-    {
-        $config = $this->configFile->read();
-
-        /** @noRector \Rector\EarlyReturn\Rector */
-        if (
-            !is_array($config)
-            || !is_array($config[self::EXTRA] ?? null)
-            || !is_array($config[self::EXTRA]['patches'] ?? null)
-        ) {
-            return [];
-        }
-
-        return $config[self::EXTRA]['patches'];
+        $packages->remove($packageName);
+        $this->config->save();
     }
 
     /**
@@ -171,12 +154,24 @@ final class ComposerUtils
 
                 $numericId = $this->gerritRestApi->getNumericId($changeId);
                 $this->io->write(sprintf('  - Numeric ID is <comment>%s</comment>', $numericId));
+
+                $branch = $this->gerritRestApi->getBranch($changeId);
+                $this->io->write(sprintf('  - Branch is <comment>%s</comment>', $branch));
             } catch (UnexpectedResponseException | InvalidResponseException | UnexpectedValueException $th) {
                 $this->io->writeError('<warning>Error getting change from Gerrit</warning>');
                 $this->io->writeError(sprintf(
                     '<warning>%s</warning>',
                     $th->getMessage()
                 ), true, IOInterface::VERBOSE);
+
+                continue;
+            }
+
+            if (!$this->checkBranch($numericId, $branch)) {
+                $this->io->writeError(sprintf(
+                    '<warning>Skipping change %s not matching the installed branch</warning>',
+                    $numericId
+                ));
 
                 continue;
             }
@@ -216,6 +211,29 @@ final class ComposerUtils
         return $patchesCount;
     }
 
+    private function checkBranch(int $changeId, string $targetBranch): bool
+    {
+        if (
+            $this->composer->getRepositoryManager()->getLocalRepository()->findPackage(
+                'typo3/cms-core',
+                $this->versionParser->normalizeBranch($targetBranch)
+            ) === null
+        ) {
+            return $this->io->askConfirmation(
+                sprintf(
+                    '<info>The change %d is related to the branch "%s" but another version appears to be installed.' .
+                    ' Applying the patch may result in errors afterwards. Should the patch for this change be' .
+                    ' installed anyway?</info> [<comment>y,N</comment>] ',
+                    $changeId,
+                    $targetBranch
+                ),
+                $this->config->load()->getIgnoreBranch()
+            );
+        }
+
+        return true;
+    }
+
     private function setSourceInstall(string $packageName): void
     {
         /*
@@ -232,7 +250,7 @@ final class ComposerUtils
         );
         */
 
-        $preferredInstall = $this->config->load($this->configFile)->getPreferredInstall();
+        $preferredInstall = $this->config->load()->getPreferredInstall();
 
         if ($preferredInstall->has($packageName, PreferredInstall::METHOD_SOURCE)) {
             // source install for this package is already configured, skip it
@@ -241,7 +259,7 @@ final class ComposerUtils
 
         $preferredInstall->add($packageName, PreferredInstall::METHOD_SOURCE);
 
-        $this->config->save($this->configFile);
+        $this->config->save();
 
         $this->addPreferredInstallChanged($packageName);
     }
@@ -254,23 +272,20 @@ final class ComposerUtils
         );
     }
 
-    /**
-     * @param array<string, array<string, string>> $patches
-     */
-    private function removePatchesFromConfigFile(array $patches): void
+    private function removePatchesFromConfigFile(Patches $patches): void
     {
-        $configPatches = $this->config->load($this->configFile)->getPatches();
+        $configPatches = $this->config->load()->getPatches();
 
-        foreach ($patches as $packgeName => $packagePatches) {
-            $configPatches->remove($packgeName, $packagePatches);
+        foreach ($patches as $packageName => $packagePatches) {
+            $configPatches->remove($packageName, $packagePatches);
         }
 
-        $this->config->save($this->configFile);
+        $this->config->save();
     }
 
     private function unsetSourceInstall(string $packageName): void
     {
-        $config = $this->config->load($this->configFile);
+        $config = $this->config->load();
         $packages = $config->getPreferredInstallChanged();
         $preferredInstall = $config->getPreferredInstall();
 
@@ -281,14 +296,14 @@ final class ComposerUtils
 
         $preferredInstall->remove($packageName);
 
-        $this->config->save($this->configFile);
+        $this->config->save();
 
         $this->removePreferredInstallChanged($packageName);
     }
 
     private function removeAppliedChange(int $numericId): void
     {
-        $changes = $this->config->load($this->configFile)->getChanges();
+        $changes = $this->config->load()->getChanges();
 
         if (!$changes->has($numericId)) {
             // the package is not listed, skip removal
@@ -297,7 +312,7 @@ final class ComposerUtils
 
         $changes->remove($numericId);
 
-        $this->config->save($this->configFile);
+        $this->config->save();
     }
 
     /**
@@ -307,7 +322,7 @@ final class ComposerUtils
     {
         $changePackages = [];
 
-        $patches = $this->getPatches();
+        $patches = $this->config->getPatches();
 
         foreach ($patches as $packageName => $packagePatches) {
             foreach ($packagePatches as $packagePatch) {
@@ -411,10 +426,10 @@ final class ComposerUtils
      * @param  array<int, string> $changeIds
      * @return int                The number of patches removed
      */
-    public function removePatches(array $changeIds, bool $skipUnistall = false): int
+    public function removePatches(array $changeIds, bool $skipUninstall = false): int
     {
         // Process change IDs
-        $appliedChanges = $this->config->load($this->configFile)->getChanges();
+        $appliedChanges = $this->config->load()->getChanges();
         $numericIds = [];
 
         foreach ($changeIds as $changeId) {
@@ -448,9 +463,9 @@ final class ComposerUtils
 
         // Remove patches
         $patchesCount = 0;
-        $patches = $this->getPatches();
+        $patches = $this->config->getPatches();
 
-        if ($patches !== [] && $numericIds !== []) {
+        if (!$patches->isEmpty() && $numericIds !== []) {
             $this->io->write('<info>Removing patches</info>');
 
             $patchesToRemove = $this->patchUtils->remove($numericIds, $patches);
@@ -458,9 +473,9 @@ final class ComposerUtils
             $this->io->write('  - Removing patches from <info>composer.json</info>');
             $this->removePatchesFromConfigFile($patchesToRemove);
 
-            if ($patchesToRemove !== []) {
+            if (!$patchesToRemove->isEmpty()) {
                 // Revert source install if the last patch was removed
-                $patches = $this->getPatches();
+                $patches = $this->config->getPatches();
 
                 foreach ($patchesToRemove as $packageName => $packagePatches) {
                     if (!isset($patches[$packageName])) {
@@ -474,7 +489,7 @@ final class ComposerUtils
                     $patchesCount += count($packagePatches);
                 }
 
-                if (!$skipUnistall) {
+                if (!$skipUninstall) {
                     // Uninstall packages with removed patches
                     $packages = $this->composer->getRepositoryManager()->getLocalRepository()->getPackages();
                     $promises = [];
@@ -518,13 +533,15 @@ final class ComposerUtils
         $patchesCount = 0;
         $affectedPackages = [];
 
-        $appliedChanges = $this->config->load($this->configFile)->getChanges();
+        $appliedChanges = $this->config->load()->getChanges();
+        $patchDirectory = $this->config->getPatchDirectory();
 
         foreach ($appliedChanges as $appliedChange) {
             if ($changeIds === [] || in_array((string)$appliedChange->getNumber(), $changeIds, true)) {
                 $patchesCount += $this->createPatches(
                     [(string)$appliedChange->getNumber()],
-                    $appliedChange->getPatchDirectory(),
+                    $appliedChange->getPatchDirectory() !== ''
+                        ? $appliedChange->getPatchDirectory() : $patchDirectory,
                     $appliedChange->getTests(),
                     $affectedPackages
                 );
@@ -540,8 +557,8 @@ final class ComposerUtils
     public function verifyPatchesForPackage(PackageInterface $package): array
     {
         $obsoleteChanges = [];
-        $appliedChanges = $this->config->load($this->configFile)->getChanges();
-        $patches = $this->getPatches();
+        $appliedChanges = $this->config->load()->getChanges();
+        $patches = $this->config->getPatches();
 
         foreach ($appliedChanges as $appliedChange) {
             $packages = $this->getPackagesForChange($appliedChange->getNumber());

@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches\Config;
 
-use GsTYPO3\CorePatches\Config;
 use GsTYPO3\CorePatches\Config\Changes\Change;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 use Iterator;
@@ -22,10 +21,8 @@ use IteratorAggregate;
 /**
  * @implements IteratorAggregate<int, Change>
  */
-final class Changes implements ConfigAwareInterface, PersistenceInterface, IteratorAggregate
+final class Changes implements PersistenceInterface, IteratorAggregate
 {
-    private Config $config;
-
     /**
      * @var array<int, Change>
      */
@@ -35,11 +32,8 @@ final class Changes implements ConfigAwareInterface, PersistenceInterface, Itera
      * @param iterable<int, Change> $values
      */
     public function __construct(
-        Config $config,
         iterable $values = []
     ) {
-        $this->config = $config;
-
         foreach ($values as $value) {
             $this->put($value->getNumber(), $value);
         }
@@ -55,7 +49,7 @@ final class Changes implements ConfigAwareInterface, PersistenceInterface, Itera
         string $patchDirectory = '',
         int $revision = -1
     ): Change {
-        $change = new Change($this->config, $number, $packages, $tests, $patchDirectory, $revision);
+        $change = new Change($number, $packages, $tests, $patchDirectory, $revision);
 
         $this->put($change->getNumber(), $change);
 
@@ -100,14 +94,6 @@ final class Changes implements ConfigAwareInterface, PersistenceInterface, Itera
     }
 
     /**
-     * @inheritDoc
-     */
-    public function getConfig(): Config
-    {
-        return $this->config;
-    }
-
-    /**
      * Returns a representation that can be natively converted to JSON, which is
      * called when invoking json_encode.
      *
@@ -136,13 +122,13 @@ final class Changes implements ConfigAwareInterface, PersistenceInterface, Itera
         foreach ($json as $changeNumber => $changeConfig) {
             // For BC only
             if (is_int($changeConfig)) {
-                $change = new Change($this->config, $changeConfig);
+                $change = new Change($changeConfig);
             } else {
                 if (!is_array($changeConfig)) {
                     throw new UnexpectedValueException(sprintf('Change is not an array (%s).', gettype($changeConfig)));
                 }
 
-                $change = new Change($this->config, $changeNumber);
+                $change = new Change($changeNumber);
                 $change->jsonUnserialize($changeConfig);
             }
 

@@ -13,35 +13,36 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches\Tests\Unit\Config;
 
-use GsTYPO3\CorePatches\Config;
 use GsTYPO3\CorePatches\Config\Patches;
 use GsTYPO3\CorePatches\Config\Patches\PackagePatches;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 use GsTYPO3\CorePatches\Tests\Unit\TestCase;
 
+/**
+ * @ covers \GsTYPO3\CorePatches\Config\Patches
+ * @ uses \GsTYPO3\CorePatches\Config\Patches\PackagePatches
+ */
 final class PatchesTest extends TestCase
 {
     public function testItemsAreAddedDuringConstruction(): void
     {
-        $config = new Config();
-
-        $packagePatches1 = new PackagePatches($config, [
+        $packagePatches1 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
-        $packagePatches2 = new PackagePatches($config, [
+        $packagePatches2 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
-        $packagePatches3 = new PackagePatches($config, [
+        $packagePatches3 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
 
-        $patches = new Patches($config, [
+        $patches = new Patches([
             'package1' => $packagePatches1,
             'package2' => $packagePatches2,
             'package3' => $packagePatches3,
@@ -51,39 +52,38 @@ final class PatchesTest extends TestCase
 
     public function testAdd(): void
     {
-        $config = new Config();
+        $patches = new Patches();
 
-        $patches = new Patches($config);
-
-        self::assertCount(3, $patches->add('package', [
+        self::assertCount(3, $patches->add('package1', [
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
+        ]));
+        self::assertCount(1, $patches->add('package1', [
+            'description4' => 'patch4',
         ]));
         self::assertCount(1, $patches);
     }
 
     public function testItemsAreReordered(): void
     {
-        $config = new Config();
-
-        $packagePatches1 = new PackagePatches($config, [
+        $packagePatches1 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
-        $packagePatches2 = new PackagePatches($config, [
+        $packagePatches2 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
-        $packagePatches3 = new PackagePatches($config, [
+        $packagePatches3 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
 
-        $patches = new Patches($config, [
+        $patches = new Patches([
             'package3' => $packagePatches3,
             'package2' => $packagePatches2,
             'package1' => $packagePatches1,
@@ -98,12 +98,9 @@ final class PatchesTest extends TestCase
 
     public function testIsEmpty(): void
     {
-        $config = new Config();
-
-        self::assertTrue((new Patches($config))->isEmpty());
+        self::assertTrue((new Patches())->isEmpty());
         self::assertFalse((new Patches(
-            $config,
-            ['package' => new PackagePatches($config, [
+            ['package' => new PackagePatches([
                 'description3' => 'patch3',
                 'description2' => 'patch2',
                 'description1' => 'patch1',
@@ -113,38 +110,36 @@ final class PatchesTest extends TestCase
 
     public function testRemove(): void
     {
-        $config = new Config();
+        self::assertNull((new Patches())->remove('invalid-package', []));
 
-        self::assertNull((new Patches($config))->remove('invalid-package', []));
-
-        $packagePatches1 = new PackagePatches($config, [
+        $packagePatches1 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
-        self::assertNull((new Patches($config, ['package' => $packagePatches1]))->remove('package', [
+        self::assertNull((new Patches(['package' => $packagePatches1]))->remove('package', [
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]));
 
-        $packagePatches1 = new PackagePatches($config, [
+        $packagePatches1 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
-        $packagePatches2 = new PackagePatches($config, [
+        $packagePatches2 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
-        $packagePatches3 = new PackagePatches($config, [
+        $packagePatches3 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
 
-        $patches = new Patches($config, [
+        $patches = new Patches([
             'package3' => $packagePatches3,
             'package2' => $packagePatches2,
             'package1' => $packagePatches1,
@@ -155,31 +150,19 @@ final class PatchesTest extends TestCase
         ]));
     }
 
-    public function testGetConfig(): void
-    {
-        $config = new Config();
-
-        self::assertSame(
-            $config,
-            (new Patches($config))->getConfig()
-        );
-    }
-
     public function testJsonSerialize(): void
     {
-        $config = new Config();
-
-        $packagePatches1 = new PackagePatches($config, [
+        $packagePatches1 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
-        $packagePatches2 = new PackagePatches($config, [
+        $packagePatches2 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
-        $packagePatches3 = new PackagePatches($config, [
+        $packagePatches3 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
@@ -191,7 +174,7 @@ final class PatchesTest extends TestCase
                 'package2' => $packagePatches2,
                 'package3' => $packagePatches3,
             ],
-            (new Patches($config, [
+            (new Patches([
                 'package3' => $packagePatches3,
                 'package2' => $packagePatches2,
                 'package1' => $packagePatches1,
@@ -201,30 +184,28 @@ final class PatchesTest extends TestCase
 
     public function testJsonUnserialize(): void
     {
-        $config = new Config();
-
-        $packagePatches1 = new PackagePatches($config, [
+        $packagePatches1 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
-        $packagePatches2 = new PackagePatches($config, [
+        $packagePatches2 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
-        $packagePatches3 = new PackagePatches($config, [
+        $packagePatches3 = new PackagePatches([
             'description3' => 'patch3',
             'description2' => 'patch2',
             'description1' => 'patch1',
         ]);
-        $patches = new Patches($config, [
+        $patches = new Patches([
             'package3' => $packagePatches3,
             'package2' => $packagePatches2,
             'package1' => $packagePatches1,
         ]);
 
-        $subject = new Patches($config);
+        $subject = new Patches();
 
         self::assertEquals(
             $patches,
@@ -243,19 +224,35 @@ final class PatchesTest extends TestCase
 
     public function testJsonUnserializeThrowsOnInvalidPackageType(): void
     {
-        $config = new Config();
-
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('Package name is not a string (integer).');
-        (new Patches($config))->jsonUnserialize([1 => ['description' => 'patch']]);
+        (new Patches())->jsonUnserialize([1 => ['description' => 'patch']]);
     }
 
     public function testJsonUnserializeThrowsOnInvalidPatchType(): void
     {
-        $config = new Config();
-
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('Patches is not an array (string).');
-        (new Patches($config))->jsonUnserialize(['package' => 'invalid-patch']);
+        (new Patches())->jsonUnserialize(['package' => 'invalid-patch']);
+    }
+
+    public function testArrayAccess(): void
+    {
+        $patches = new Patches();
+        $package = $patches->add('package1', [
+            'description1' => 'patch1',
+        ]);
+
+        self::assertFalse($patches->offsetExists('dummy'));
+        self::assertTrue($patches->offsetExists('package1'));
+        self::assertSame($package, $patches->offsetGet('package1'));
+
+        $patches->offsetSet('package2', new PackagePatches());
+        self::assertCount(2, $patches);
+        self::assertFalse($patches->offsetExists('dummy'));
+
+        $patches->offsetUnset('package2');
+        self::assertCount(1, $patches);
+        self::assertFalse($patches->offsetExists('package2'));
     }
 }

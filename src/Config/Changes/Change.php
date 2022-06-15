@@ -13,13 +13,11 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches\Config\Changes;
 
-use GsTYPO3\CorePatches\Config;
-use GsTYPO3\CorePatches\Config\ConfigAwareInterface;
 use GsTYPO3\CorePatches\Config\Packages;
 use GsTYPO3\CorePatches\Config\PersistenceInterface;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 
-final class Change implements ConfigAwareInterface, PersistenceInterface
+final class Change implements PersistenceInterface
 {
     /**
      * @var string
@@ -41,8 +39,6 @@ final class Change implements ConfigAwareInterface, PersistenceInterface
      */
     private const PATCH_DIR = 'patch-directory';
 
-    private Config $config;
-
     private int $number;
 
     private int $revision;
@@ -57,23 +53,16 @@ final class Change implements ConfigAwareInterface, PersistenceInterface
      * @param iterable<int, string> $packages
      */
     public function __construct(
-        Config $config,
         int $number,
         iterable $packages = [],
         bool $tests = false,
         string $patchDirectory = '',
         int $revision = -1
     ) {
-        $this->config = $config;
         $this->number = $number;
         $this->revision = $revision;
-        $this->packages = new Packages($this->config, $packages);
+        $this->packages = new Packages($packages);
         $this->tests = $tests;
-
-        if ($patchDirectory === $this->config->getPatchDirectory()) {
-            $patchDirectory = '';
-        }
-
         $this->patchDirectory = $patchDirectory;
     }
 
@@ -99,19 +88,7 @@ final class Change implements ConfigAwareInterface, PersistenceInterface
 
     public function getPatchDirectory(): string
     {
-        if ($this->patchDirectory === '') {
-            return $this->config->getPatchDirectory();
-        }
-
         return $this->patchDirectory;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getConfig(): Config
-    {
-        return $this->config;
     }
 
     /**

@@ -15,9 +15,6 @@ namespace GsTYPO3\CorePatches;
 
 use Composer\Plugin\Capability\CommandProvider as CommandProviderCapability;
 
-/**
- * @codeCoverageIgnore
- */
 final class CommandProvider implements CommandProviderCapability
 {
     /**

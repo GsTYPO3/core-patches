@@ -68,6 +68,14 @@ final class RestApi
     }
 
     /**
+     * @see https://review.typo3.org/Documentation/rest-api-changes.html#change-id
+     */
+    public function getBranch(string $changeId): string
+    {
+        return $this->getChange($changeId)->branch;
+    }
+
+    /**
      * @return string                   The normalized subject
      * @throws UnexpectedValueException
      *
@@ -78,7 +86,9 @@ final class RestApi
         $subject = $this->getChange($changeId)->subject;
 
         if (($normalizedSubject = preg_replace('#^\[.+?\] #', '', $subject)) === null) {
+            // @codeCoverageIgnoreStart
             throw new UnexpectedValueException(sprintf('Subject "%s" could not be normalized.', $subject));
+            // @codeCoverageIgnoreEnd
         }
 
         return $normalizedSubject;
