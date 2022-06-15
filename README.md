@@ -29,6 +29,8 @@ dependency for production usage.
 
 ## Installation
 
+This package requires Composer 2.0 or higher.
+
 Require this package as normal dependency:
 
 ```bash
