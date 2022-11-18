@@ -1,0 +1,55 @@
+{
+	"name": "gilbertsoft/typo3-core-patches-project",
+	"description": "Project to test the gilbertsoft/typo3-core-patches package.",
+	"license": "MIT",
+	"type": "project",
+	"authors": [
+		{
+			"name": "Simon Gilli",
+			"email": "simon.gilli@gilbertsoft.org",
+			"homepage": "https://gilbertsoft.org",
+			"role": "developer"
+		}
+	],
+	"homepage": "https://github.com/GsTYPO3/core-patches",
+	"require": {
+		"php": "^7.4 || ^8.0",
+		"gilbertsoft/typo3-core-patches": "0.1-dev",
+		"typo3/cms-core": "10.4.22 || 11.5.4",
+		"typo3/minimal": "^10.4 || ^11.5"
+	},
+	"require-dev": {
+		"composer/composer": "^2.0.9",
+		"ergebnis/composer-normalize": "*"
+	},
+	"repositories": [
+		{
+			"type": "path",
+			"url": "../../..",
+			"options": {
+				"versions": {
+					"gilbertsoft/typo3-core-patches": "0.1-dev"
+				}
+			}
+		}
+	],
+	"config": {
+		"allow-plugins": {
+			"ergebnis/composer-normalize": true,
+			"gilbertsoft/typo3-core-patches": true,
+			"typo3/class-alias-loader": true,
+			"typo3/cms-composer-installers": true
+		},
+		"discard-changes": true
+	},
+	"extra": {
+		"gilbertsoft/typo3-core-patches": {
+			"applied-changes": [73022]
+		},
+		"patches": {
+			"typo3/cms-core": {
+				"Avoid service listing in ext:reports": "patches/typo3-cms-core-review-73022.patch"
+			}
+		}
+	}
+}
