@@ -147,6 +147,31 @@ final class ComposerUtils
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    private function getOptions(): array
+    {
+        $config = $this->configFile->read();
+
+        /** @noRector \Rector\EarlyReturn\Rector */
+        if (
+            !is_array($config)
+            || !is_array($config[self::EXTRA] ?? null)
+            || !is_array($config[self::EXTRA][self::EXTRA_PLUGIN] ?? null)
+        ) {
+            return [];
+        }
+        $result = $config[self::EXTRA][self::EXTRA_PLUGIN];
+        unset($result['applied-changes']);
+        return $result;
+    }
+
+    public function hasAutoCheckEnabled(): bool
+    {
+        return !($this->getOptions()['skip-autocheck'] ?? false);
+    }
+
+    /**
      * @param array<int, string> $changeIds
      * @param array<int, string> $affectedPackages
      */

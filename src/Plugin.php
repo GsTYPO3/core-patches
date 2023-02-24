@@ -100,6 +100,10 @@ final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
             return;
         }
 
+        if (!$this->composerUtils->hasAutoCheckEnabled()) {
+            return;
+        }
+
         $installerEvent->getIO()->write('<info>Checking for obsolete patches, this may take a while...</info>');
 
         foreach ($installerEvent->getTransaction()->getOperations() as $operation) {
