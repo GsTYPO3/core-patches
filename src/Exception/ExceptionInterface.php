@@ -11,6 +11,8 @@
 
 namespace GsTYPO3\CorePatches\Exception;
 
-interface ExceptionInterface extends \Throwable
+use Throwable;
+
+interface ExceptionInterface extends Throwable
 {
 }

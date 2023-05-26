@@ -17,10 +17,10 @@ use Composer\Config\JsonConfigSource;
 use Composer\Factory;
 use Composer\Json\JsonFile;
 use GsTYPO3\CorePatches\Config\Changes;
-use GsTYPO3\CorePatches\Config\Packages;
 use GsTYPO3\CorePatches\Config\Patches;
 use GsTYPO3\CorePatches\Config\PersistenceInterface;
 use GsTYPO3\CorePatches\Config\PreferredInstall;
+use GsTYPO3\CorePatches\Config\PreferredInstallChanged;
 
 final class Config implements PersistenceInterface
 {
@@ -66,7 +66,7 @@ final class Config implements PersistenceInterface
 
     private Changes $changes;
 
-    private Packages $preferredInstallChanged;
+    private PreferredInstallChanged $preferredInstallChanged;
 
     private string $patchDirectory = '';
 
@@ -77,7 +77,7 @@ final class Config implements PersistenceInterface
     public function __construct()
     {
         $this->changes = new Changes($this);
-        $this->preferredInstallChanged = new Packages($this);
+        $this->preferredInstallChanged = new PreferredInstallChanged($this);
         $this->preferredInstall = new PreferredInstall($this);
         $this->patches = new Patches($this);
     }
@@ -87,7 +87,7 @@ final class Config implements PersistenceInterface
         return $this->changes;
     }
 
-    public function getPreferredInstallChanged(): Packages
+    public function getPreferredInstallChanged(): PreferredInstallChanged
     {
         return $this->preferredInstallChanged;
     }
@@ -120,16 +120,20 @@ final class Config implements PersistenceInterface
 
     private function isEmpty(): bool
     {
-        /** @noRector \Rector\EarlyReturn\Rector */
-        return $this->changes->isEmpty()
-            && $this->preferredInstallChanged->isEmpty()
-            && $this->patchDirectory === ''
-        ;
+        if (!$this->changes->isEmpty()) {
+            return false;
+        }
+
+        if (!$this->preferredInstallChanged->isEmpty()) {
+            return false;
+        }
+
+        return $this->patchDirectory === '';
     }
 
     public function load(?JsonFile $jsonFile = null): self
     {
-        if ($jsonFile === null) {
+        if (!$jsonFile instanceof JsonFile) {
             $jsonFile = new JsonFile(Factory::getComposerFile());
         }
 
@@ -144,7 +148,7 @@ final class Config implements PersistenceInterface
 
     public function save(?JsonFile $jsonFile = null): self
     {
-        if ($jsonFile === null) {
+        if (!$jsonFile instanceof JsonFile) {
             $jsonFile = new JsonFile(Factory::getComposerFile());
         }
 

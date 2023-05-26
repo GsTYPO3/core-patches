@@ -30,7 +30,7 @@ final class ComposerUtilsTest extends TestCase
 
     private string $testWorkingDir;
 
-    private BufferIO $io;
+    private BufferIO $bufferIO;
 
     private Composer $composer;
 
@@ -52,9 +52,9 @@ final class ComposerUtilsTest extends TestCase
             'composer.json' => 'FIX:composer.patches.json',
         ]);
 
-        $this->io = new BufferIO();
-        $this->composer = Factory::create($this->io);
-        $this->composerUtils = new ComposerUtils($this->composer, $this->io);
+        $this->bufferIO = new BufferIO();
+        $this->composer = Factory::create($this->bufferIO);
+        $this->composerUtils = new ComposerUtils($this->composer, $this->bufferIO);
     }
 
     protected function tearDown(): void

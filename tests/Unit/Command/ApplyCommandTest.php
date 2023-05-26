@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace GsTYPO3\CorePatches\Tests\Unit\Command;
 
 use GsTYPO3\CorePatches\Command\Typo3\Patch\ApplyCommand;
+use RuntimeException;
+use Throwable;
 
 final class ApplyCommandTest extends CommandTestCase
 {
@@ -60,11 +62,15 @@ final class ApplyCommandTest extends CommandTestCase
     {
         $commandTester = $this->getCommandTester('typo3:patch:apply');
 
-        // test default path argument
-        $commandTester->execute($this->getInput(['73021']));
-        $commandTester->assertCommandIsSuccessful();
+        try {
+            // test default path argument
+            $commandTester->execute($this->getInput(['73021']));
+            $commandTester->assertCommandIsSuccessful();
 
-        $display = $commandTester->getDisplay();
-        self::assertStringContainsString('2 TYPO3 core patches added', $display);
+            $display = $commandTester->getDisplay();
+            self::assertStringContainsString('2 TYPO3 core patches added', $display);
+        } catch (Throwable $throwable) {
+            throw new RuntimeException($commandTester->getDisplay(), 0, $throwable);
+        }
     }
 }

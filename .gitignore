@@ -2,6 +2,7 @@
 /.build/*
 /.ddev/data/*
 /.mage/*
+/.phplint.cache
 /dump/*
 !/dump/.gitkeep
 /public/*
@@ -11,6 +12,5 @@
 
 # Files
 /.php-cs-fixer.cache
-/.phplint-cache
 /composer.lock
 .phpunit.result.cache

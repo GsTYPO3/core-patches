@@ -15,6 +15,7 @@ namespace GsTYPO3\CorePatches\Gerrit;
 
 use Composer\Downloader\TransportException;
 use Composer\Util\HttpDownloader;
+use Exception;
 use GsTYPO3\CorePatches\Exception\InvalidResponseException;
 use GsTYPO3\CorePatches\Exception\UnexpectedResponseException;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
@@ -148,7 +149,7 @@ final class RestApi
                 $matches
             ) === 1
         ) {
-            $changeId = (string)$matches[1];
+            return $matches[1];
         }
 
         return $changeId;
@@ -168,12 +169,12 @@ final class RestApi
                 $options['http']['header'][] = 'Accept: application/json';
             }
 
-            $body = $this->httpDownloader !== null
+            $body = $this->httpDownloader instanceof HttpDownloader
                 ? $this->httpDownloader->get($url, $options)->getBody()
                 : file_get_contents($url);
         } catch (TransportException $transportException) {
             throw new UnexpectedResponseException($transportException->getMessage(), 0, $transportException);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             throw new UnexpectedResponseException('Could not read ' . $url . "\n\n" . $exception->getMessage());
         }
 
@@ -185,8 +186,8 @@ final class RestApi
         }
 
         // Strip magic prefix line
-        if (strpos($body, self::MAGIC_PREFIX_LINE) === 0) {
-            $body = substr($body, strlen(self::MAGIC_PREFIX_LINE));
+        if (strncmp($body, self::MAGIC_PREFIX_LINE, strlen(self::MAGIC_PREFIX_LINE)) === 0) {
+            return substr($body, strlen(self::MAGIC_PREFIX_LINE));
         }
 
         return $body;

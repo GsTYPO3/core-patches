@@ -29,14 +29,14 @@ final class CommandTester
 {
     private BaseCommandTester $baseCommandTester;
 
-    private BufferIO $io;
+    private BufferIO $bufferIO;
 
     public function __construct(Command $command)
     {
-        $this->io = new BufferIO();
+        $this->bufferIO = new BufferIO();
 
         if ($command instanceof BaseCommand) {
-            $command->setIO($this->io);
+            $command->setIO($this->bufferIO);
         }
 
         $this->baseCommandTester = new BaseCommandTester($command);
@@ -54,10 +54,10 @@ final class CommandTester
     public function getDisplay(bool $normalize = false): string
     {
         $display = $this->baseCommandTester->getDisplay($normalize);
-        $display .= $this->io->getOutput();
+        $display .= $this->bufferIO->getOutput();
 
         if ($normalize) {
-            $display = str_replace(\PHP_EOL, "\n", $display);
+            return str_replace(\PHP_EOL, "\n", $display);
         }
 
         return $display;

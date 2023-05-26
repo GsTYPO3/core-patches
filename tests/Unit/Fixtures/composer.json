@@ -35,6 +35,7 @@
 	],
 	"config": {
 		"allow-plugins": {
+			"cweagans/composer-patches": true,
 			"ergebnis/composer-normalize": true,
 			"gilbertsoft/typo3-core-patches": true,
 			"typo3/class-alias-loader": true,

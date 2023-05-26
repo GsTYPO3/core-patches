@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace GsTYPO3\CorePatches\Tests\Unit\Command;
 
 use GsTYPO3\CorePatches\Command\Typo3\Patch\RemoveCommand;
+use RuntimeException;
+use Throwable;
 
 final class RemoveCommandTest extends CommandTestCase
 {
@@ -50,11 +52,15 @@ final class RemoveCommandTest extends CommandTestCase
     {
         $commandTester = $this->getCommandTester('typo3:patch:remove');
 
-        // test default path argument
-        $commandTester->execute($this->getInput(['73021']));
-        $commandTester->assertCommandIsSuccessful();
+        try {
+            // test default path argument
+            $commandTester->execute($this->getInput(['73021']));
+            $commandTester->assertCommandIsSuccessful();
 
-        $display = $commandTester->getDisplay();
-        self::assertStringContainsString('0 TYPO3 core patches removed', $display);
+            $display = $commandTester->getDisplay();
+            self::assertStringContainsString('0 TYPO3 core patches removed', $display);
+        } catch (Throwable $throwable) {
+            throw new RuntimeException($commandTester->getDisplay(), 0, $throwable);
+        }
     }
 }
