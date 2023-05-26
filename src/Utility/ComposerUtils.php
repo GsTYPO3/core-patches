@@ -561,7 +561,7 @@ final class ComposerUtils
                 }
 
                 foreach ($includedInInfo->branches as $branch) {
-                    if (Semver::satisfies($package->getVersion(), $branch)) {
+                    if (Semver::satisfies($package->getVersion(), 'dev-' . $branch)) {
                         if ($this->askRemoval($appliedChange->getNumber())) {
                             $obsoleteChanges[] = (string)$appliedChange->getNumber();
                             $this->patchUtils->prepareRemove([$appliedChange->getNumber()], $patches);
