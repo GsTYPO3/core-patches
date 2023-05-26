@@ -136,7 +136,7 @@ composer config extra.gilbertsoft/typo3-core-patches.ignore-branch true
 When running `composer update` or `composer install`, the plugin detects changes
 that already exist in the version being installed and suggests removing them. If
 you run Composer with the `--no-interaction` option, the patches are always
-removed.
+preserved.
 
 Errors may occur if you use the source-dist of packages, which can be solved by
 adding the `config.discard-changes` configuration option to your `composer.json`,
