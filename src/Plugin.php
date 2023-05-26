@@ -100,7 +100,7 @@ final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
             return;
         }
 
-        if (!$this->composerUtils->hasAutoCheckEnabled()) {
+        if ($this->composerUtils->isObsoletePatchesCheckDisabled()) {
             return;
         }
 

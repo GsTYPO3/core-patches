@@ -75,6 +75,11 @@ final class Config implements PersistenceInterface
      */
     private const PLUGIN_IGNORE_BRANCH = 'ignore-branch';
 
+    /**
+     * @var string
+     */
+    private const SKIP_OBSOLETE_PATCHES_CHECK = 'skip-obsolete-patches-check';
+
     private JsonFile $jsonFile;
 
     private ConfigSourceInterface $configSource;
@@ -90,6 +95,8 @@ final class Config implements PersistenceInterface
     private Patches $patches;
 
     private bool $ignoreBranch = \false;
+
+    private bool $skipObsoletePatchesCheck = \false;
 
     public function __construct(
         ?JsonFile $jsonFile = null,
@@ -150,6 +157,11 @@ final class Config implements PersistenceInterface
     public function getPatches(): Patches
     {
         return $this->patches;
+    }
+
+    public function getSkipObsoletePatchesCheck(): bool
+    {
+        return $this->skipObsoletePatchesCheck;
     }
 
     private function isEmpty(): bool
@@ -259,6 +271,10 @@ final class Config implements PersistenceInterface
             $config[self::PLUGIN_IGNORE_BRANCH] = $this->ignoreBranch;
         }
 
+        if ($this->skipObsoletePatchesCheck) {
+            $config[self::SKIP_OBSOLETE_PATCHES_CHECK] = $this->skipObsoletePatchesCheck;
+        }
+
         return $config;
     }
 
@@ -317,6 +333,12 @@ final class Config implements PersistenceInterface
         }
 
         $this->ignoreBranch = $ignoreBranch;
+
+        if (!is_bool($skipObsoletePatchesCheck = $packageConfig[self::SKIP_OBSOLETE_PATCHES_CHECK] ?? null)) {
+            $skipObsoletePatchesCheck = false;
+        }
+
+        $this->skipObsoletePatchesCheck = $skipObsoletePatchesCheck;
 
         return $this;
     }

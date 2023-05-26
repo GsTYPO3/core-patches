@@ -145,10 +145,10 @@ see <https://getcomposer.org/doc/06-config.md#discard-changes>. Run e.g.
 `composer.json`.
 
 If you need to disable this feature (e.g. because a firewall blocks access to
-https://review.typo3.org on a specific system), you can use
+<https://review.typo3.org> on a specific system), you can use
 
 ```bash
-composer config extra.gilbertsoft/typo3-core-patches.skip-autocheck true
+composer config extra.gilbertsoft/typo3-core-patches.skip-obsolete-patches-check true
 ```
 
 ## Feedback / Bug reports / Contribution
