@@ -21,7 +21,7 @@ use IteratorAggregate;
 /**
  * @implements IteratorAggregate<int, string>
  */
-final class Packages implements ConfigAwareInterface, PersistenceInterface, IteratorAggregate
+class Packages implements ConfigAwareInterface, PersistenceInterface, IteratorAggregate
 {
     private Config $config;
 

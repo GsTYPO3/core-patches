@@ -36,7 +36,7 @@ final class CommandIsSuccessful extends Constraint
      */
     protected function matches($other): bool
     {
-        return 0 === $other;
+        return $other === 0;
     }
 
     /**

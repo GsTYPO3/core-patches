@@ -18,8 +18,8 @@ use Composer\Factory;
 use Composer\IO\BufferIO;
 use GsTYPO3\CorePatches\Gerrit\RestApi;
 use GsTYPO3\CorePatches\Tests\Unit\TestCase;
-use RuntimeException;
 use Iterator;
+use RuntimeException;
 
 final class RestApiTest extends TestCase
 {
@@ -27,7 +27,7 @@ final class RestApiTest extends TestCase
 
     private string $testWorkingDir;
 
-    private BufferIO $io;
+    private BufferIO $bufferIO;
 
     private Config $config;
 
@@ -49,9 +49,9 @@ final class RestApiTest extends TestCase
             'composer.json' => 'FIX:composer.json',
         ]);
 
-        $this->io = new BufferIO();
-        $this->config = Factory::createConfig($this->io);
-        $this->gerritRestApi = new RestApi(Factory::createHttpDownloader($this->io, $this->config));
+        $this->bufferIO = new BufferIO();
+        $this->config = Factory::createConfig($this->bufferIO);
+        $this->gerritRestApi = new RestApi(Factory::createHttpDownloader($this->bufferIO, $this->config));
     }
 
     protected function tearDown(): void

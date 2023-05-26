@@ -13,7 +13,7 @@ $config = \TYPO3\CodingStandards\CsFixerConfig::create();
 $config
     ->setHeader($header, true)
     ->addRules([
-        '@PSR12' => true,
+        'modernize_strpos' => false,
         'phpdoc_align' => true,
         'phpdoc_annotation_without_dot' => true,
         'phpdoc_tag_casing' => true,

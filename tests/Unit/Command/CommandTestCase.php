@@ -52,6 +52,7 @@ abstract class CommandTestCase extends TestCase
         $this->application->run(
             new ArrayInput([
                 'command' => 'install',
+                '--no-dev' => true,
                 '--no-progress' => true,
                 '--ansi' => true,
                 '--no-interaction' => true,

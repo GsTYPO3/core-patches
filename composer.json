@@ -146,7 +146,7 @@
 			"@fix:php:cs"
 		],
 		"fix:php:cs": "php-cs-fixer fix",
-		"fix:php:rector": "rector process --no-diffs",
+		"fix:php:rector": "rector process --no-diffs --clear-cache",
 		"fix:php:sniff": "phpcbf --standard=PSR12 src tests",
 		"test:php:unit": [
 			"Composer\\Config::disableProcessTimeout",

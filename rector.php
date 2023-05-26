@@ -12,6 +12,10 @@ declare(strict_types=1);
  */
 
 use Rector\Config\RectorConfig;
+use Rector\PHPUnit\Set\PHPUnitLevelSetList;
+use Rector\PHPUnit\Set\PHPUnitSetList;
+use Rector\Privatization\Rector\Class_\FinalizeClassesWithoutChildrenRector;
+use Rector\Set\ValueObject\DowngradeLevelSetList;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
 
@@ -26,16 +30,36 @@ return static function (RectorConfig $rectorConfig): void {
         __DIR__ . '/tools/phpunit/vendor/autoload.php',
     ]);
 
+    $rectorConfig->importNames();
+    $rectorConfig->importShortClasses();
+    $rectorConfig->removeUnusedImports();
+
     // Define what rule sets will be applied
-    $rectorConfig->import(LevelSetList::UP_TO_PHP_74);
-    $rectorConfig->import(SetList::CODE_QUALITY);
-    $rectorConfig->import(SetList::CODING_STYLE);
-    $rectorConfig->import(SetList::DEAD_CODE);
-    $rectorConfig->import(SetList::NAMING);
-    $rectorConfig->import(SetList::PRIVATIZATION);
-    $rectorConfig->import(SetList::PSR_4);
-    $rectorConfig->import(SetList::TYPE_DECLARATION);
-    $rectorConfig->import(SetList::TYPE_DECLARATION_STRICT);
-    $rectorConfig->import(SetList::UNWRAP_COMPAT);
-    $rectorConfig->import(SetList::EARLY_RETURN);
+    $rectorConfig->sets([
+        LevelSetList::UP_TO_PHP_74,
+        DowngradeLevelSetList::DOWN_TO_PHP_74,
+        SetList::CODE_QUALITY,
+        SetList::CODING_STYLE,
+        SetList::DEAD_CODE,
+        SetList::NAMING,
+        SetList::PRIVATIZATION,
+        SetList::PSR_4,
+        SetList::TYPE_DECLARATION,
+        SetList::EARLY_RETURN,
+
+        PHPUnitLevelSetList::UP_TO_PHPUNIT_90,
+        PHPUnitSetList::PHPUNIT_91,
+        PHPUnitSetList::PHPUNIT_CODE_QUALITY,
+        PHPUnitSetList::PHPUNIT_EXCEPTION,
+        PHPUnitSetList::REMOVE_MOCKS,
+        PHPUnitSetList::PHPUNIT_SPECIFIC_METHOD,
+        PHPUnitSetList::PHPUNIT_YIELD_DATA_PROVIDER,
+        PHPUnitSetList::ANNOTATIONS_TO_ATTRIBUTES,
+    ]);
+
+    $rectorConfig->skip([
+        FinalizeClassesWithoutChildrenRector::class => [
+            __DIR__ . '/src/Exception/RuntimeException.php',
+        ],
+    ]);
 };

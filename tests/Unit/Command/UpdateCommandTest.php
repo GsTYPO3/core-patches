@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace GsTYPO3\CorePatches\Tests\Unit\Command;
 
 use GsTYPO3\CorePatches\Command\Typo3\Patch\UpdateCommand;
+use RuntimeException;
+use Throwable;
 
 final class UpdateCommandTest extends CommandTestCase
 {
@@ -55,11 +57,15 @@ final class UpdateCommandTest extends CommandTestCase
     {
         $commandTester = $this->getCommandTester('typo3:patch:update');
 
-        // test default path argument
-        $commandTester->execute($this->getInput());
-        $commandTester->assertCommandIsSuccessful();
+        try {
+            // test default path argument
+            $commandTester->execute($this->getInput());
+            $commandTester->assertCommandIsSuccessful();
 
-        $display = $commandTester->getDisplay();
-        self::assertStringContainsString('0 TYPO3 core patches updated', $display);
+            $display = $commandTester->getDisplay();
+            self::assertStringContainsString('0 TYPO3 core patches updated', $display);
+        } catch (Throwable $throwable) {
+            throw new RuntimeException($commandTester->getDisplay(), 0, $throwable);
+        }
     }
 }

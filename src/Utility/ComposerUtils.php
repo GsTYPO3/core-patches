@@ -46,7 +46,7 @@ final class ComposerUtils
 
     private Config $config;
 
-    private JsonFile $configFile;
+    private JsonFile $jsonFile;
 
     private Application $application;
 
@@ -60,7 +60,7 @@ final class ComposerUtils
         $this->io = $io;
 
         $this->config = new Config();
-        $this->configFile = new JsonFile(Factory::getComposerFile(), null, $this->io);
+        $this->jsonFile = new JsonFile(Factory::getComposerFile(), null, $this->io);
         $this->application = new Application();
         $this->application->setAutoExit(false);
 
@@ -73,13 +73,13 @@ final class ComposerUtils
      */
     private function addPatchesToConfigFile(array $patches): void
     {
-        $configPatches = $this->config->load($this->configFile)->getPatches();
+        $configPatches = $this->config->load($this->jsonFile)->getPatches();
 
         foreach ($patches as $packgeName => $packagePatches) {
             $configPatches->add($packgeName, $packagePatches);
         }
 
-        $this->config->save($this->configFile);
+        $this->config->save($this->jsonFile);
     }
 
     /**
@@ -92,7 +92,7 @@ final class ComposerUtils
         string $destination = '',
         int $revision = -1
     ): void {
-        $changes = $this->config->load($this->configFile)->getChanges();
+        $changes = $this->config->load($this->jsonFile)->getChanges();
 
         if ($changes->has($numericId)) {
             // the package is already listed, skip addition
@@ -101,12 +101,12 @@ final class ComposerUtils
 
         $changes->add($numericId, $packages, $includeTests, $destination, $revision);
 
-        $this->config->save($this->configFile);
+        $this->config->save($this->jsonFile);
     }
 
     private function addPreferredInstallChanged(string $packageName): void
     {
-        $preferredInstallChanged = $this->config->load($this->configFile)->getPreferredInstallChanged();
+        $preferredInstallChanged = $this->config->load($this->jsonFile)->getPreferredInstallChanged();
 
         if ($preferredInstallChanged->has($packageName)) {
             // the package is already listed, skip addition
@@ -114,12 +114,12 @@ final class ComposerUtils
         }
 
         $preferredInstallChanged->add($packageName);
-        $this->config->save($this->configFile);
+        $this->config->save($this->jsonFile);
     }
 
     private function removePreferredInstallChanged(string $packageName): void
     {
-        $preferredInstallChanged = $this->config->load($this->configFile)->getPreferredInstallChanged();
+        $preferredInstallChanged = $this->config->load($this->jsonFile)->getPreferredInstallChanged();
 
         if (!$preferredInstallChanged->has($packageName)) {
             // the package is not listed, skip removal
@@ -127,7 +127,7 @@ final class ComposerUtils
         }
 
         $preferredInstallChanged->remove($packageName);
-        $this->config->save($this->configFile);
+        $this->config->save($this->jsonFile);
     }
 
     /**
@@ -135,14 +135,17 @@ final class ComposerUtils
      */
     private function getPatches(): array
     {
-        $config = $this->configFile->read();
+        $config = $this->jsonFile->read();
 
-        /** @noRector \Rector\EarlyReturn\Rector */
-        if (
-            !is_array($config)
-            || !is_array($config[self::EXTRA] ?? null)
-            || !is_array($config[self::EXTRA]['patches'] ?? null)
-        ) {
+        if (!is_array($config)) {
+            return [];
+        }
+
+        if (!is_array($config[self::EXTRA] ?? null)) {
+            return [];
+        }
+
+        if (!is_array($config[self::EXTRA]['patches'] ?? null)) {
             return [];
         }
 
@@ -232,7 +235,7 @@ final class ComposerUtils
         );
         */
 
-        $preferredInstall = $this->config->load($this->configFile)->getPreferredInstall();
+        $preferredInstall = $this->config->load($this->jsonFile)->getPreferredInstall();
 
         if ($preferredInstall->has($packageName, PreferredInstall::METHOD_SOURCE)) {
             // source install for this package is already configured, skip it
@@ -241,7 +244,7 @@ final class ComposerUtils
 
         $preferredInstall->add($packageName, PreferredInstall::METHOD_SOURCE);
 
-        $this->config->save($this->configFile);
+        $this->config->save($this->jsonFile);
 
         $this->addPreferredInstallChanged($packageName);
     }
@@ -259,36 +262,36 @@ final class ComposerUtils
      */
     private function removePatchesFromConfigFile(array $patches): void
     {
-        $configPatches = $this->config->load($this->configFile)->getPatches();
+        $configPatches = $this->config->load($this->jsonFile)->getPatches();
 
         foreach ($patches as $packgeName => $packagePatches) {
             $configPatches->remove($packgeName, $packagePatches);
         }
 
-        $this->config->save($this->configFile);
+        $this->config->save($this->jsonFile);
     }
 
     private function unsetSourceInstall(string $packageName): void
     {
-        $config = $this->config->load($this->configFile);
-        $packages = $config->getPreferredInstallChanged();
+        $config = $this->config->load($this->jsonFile);
+        $preferredInstallChanged = $config->getPreferredInstallChanged();
         $preferredInstall = $config->getPreferredInstall();
 
-        if (!$packages->has($packageName)) {
+        if (!$preferredInstallChanged->has($packageName)) {
             // source was not set by this package, skip removal
             return;
         }
 
         $preferredInstall->remove($packageName);
 
-        $this->config->save($this->configFile);
+        $this->config->save($this->jsonFile);
 
         $this->removePreferredInstallChanged($packageName);
     }
 
     private function removeAppliedChange(int $numericId): void
     {
-        $changes = $this->config->load($this->configFile)->getChanges();
+        $changes = $this->config->load($this->jsonFile)->getChanges();
 
         if (!$changes->has($numericId)) {
             // the package is not listed, skip removal
@@ -297,7 +300,7 @@ final class ComposerUtils
 
         $changes->remove($numericId);
 
-        $this->config->save($this->configFile);
+        $this->config->save($this->jsonFile);
     }
 
     /**
@@ -378,7 +381,7 @@ final class ComposerUtils
                         // Remove package from the array
                         $affectedPackages = array_filter(
                             $affectedPackages,
-                            fn ($value): bool => $value !== $packageName
+                            static fn ($value): bool => $value !== $packageName
                         );
                     }
                 }
@@ -414,7 +417,7 @@ final class ComposerUtils
     public function removePatches(array $changeIds, bool $skipUnistall = false): int
     {
         // Process change IDs
-        $appliedChanges = $this->config->load($this->configFile)->getChanges();
+        $appliedChanges = $this->config->load($this->jsonFile)->getChanges();
         $numericIds = [];
 
         foreach ($changeIds as $changeId) {
@@ -518,7 +521,7 @@ final class ComposerUtils
         $patchesCount = 0;
         $affectedPackages = [];
 
-        $appliedChanges = $this->config->load($this->configFile)->getChanges();
+        $appliedChanges = $this->config->load($this->jsonFile)->getChanges();
 
         foreach ($appliedChanges as $appliedChange) {
             if ($changeIds === [] || in_array((string)$appliedChange->getNumber(), $changeIds, true)) {
@@ -540,7 +543,7 @@ final class ComposerUtils
     public function verifyPatchesForPackage(PackageInterface $package): array
     {
         $obsoleteChanges = [];
-        $appliedChanges = $this->config->load($this->configFile)->getChanges();
+        $appliedChanges = $this->config->load($this->jsonFile)->getChanges();
         $patches = $this->getPatches();
 
         foreach ($appliedChanges as $appliedChange) {

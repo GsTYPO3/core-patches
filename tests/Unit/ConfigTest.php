@@ -15,9 +15,12 @@ namespace GsTYPO3\CorePatches\Tests\Unit;
 
 use Composer\Json\JsonFile;
 use GsTYPO3\CorePatches\Config;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 final class ConfigTest extends TestCase
 {
+    use ProphecyTrait;
+
     public function testLoadWorksProperly(): void
     {
         $objectProphecy = $this->prophesize(JsonFile::class);
@@ -46,7 +49,7 @@ final class ConfigTest extends TestCase
 
         $config = new Config();
 
-        $config->load($objectProphecy->reveal());
+        self::assertSame($config, $config->load($objectProphecy->reveal()));
 
         self::assertCount(2, $config->getChanges());
         self::assertCount(2, $config->getPreferredInstallChanged());
