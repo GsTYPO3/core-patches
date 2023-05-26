@@ -22,12 +22,15 @@ final class Utils
      */
     public static function isCI(): bool
     {
-        return
+        return (
             // GitHub Actions, Travis CI, CircleCI, Cirrus CI, GitLab CI, AppVeyor, CodeShip, dsari
             \getenv('CI') !== false ||
             // Jenkins, TeamCity
             \getenv('BUILD_NUMBER') !== false ||
             // TaskCluster, dsari
-            \getenv('RUN_ID') !== false;
+            \getenv('RUN_ID') !== false ||
+            // For testing
+            \getenv('GS_CI') === '1'
+        ) && \getenv('GS_CI') !== '0';
     }
 }

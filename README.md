@@ -145,6 +145,8 @@ see <https://getcomposer.org/doc/06-config.md#discard-changes>. Run e.g.
 `composer.json`.
 
 If a CI environment is detected, the detection of merged changes is skipped.
+You can change this behavior by setting the environment variable `GS_CI` to `1`
+to force CI mode or to `0` to disable CI mode.
 
 If you need to disable this feature (e.g. because a firewall blocks access to
 <https://review.typo3.org> on a specific system), you can use

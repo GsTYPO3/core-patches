@@ -377,7 +377,7 @@ final class ComposerUtils
 
     public function isObsoletePatchesCheckDisabled(): bool
     {
-        return $this->config->load($this->jsonFile)->getSkipObsoletePatchesCheck();
+        return $this->config->load()->getSkipObsoletePatchesCheck();
     }
 
     /**

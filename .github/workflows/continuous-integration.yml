@@ -22,6 +22,7 @@ env:
   COMPOSER_FLAGS: --ansi --no-interaction --no-progress
   COMPOSER_INSTALL_FLAGS: --prefer-dist
   COMPOSER_UPDATE_FLAGS: ''
+  GS_CI: 0
 
 jobs:
   validation:

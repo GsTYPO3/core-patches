@@ -44,6 +44,7 @@ final class ConfigTest extends TestCase
         int $expectedAppliedChangesCount,
         int $expectedPreferredInstallChangedCount,
         string $expectedPatchDirectory,
+        bool $expectedSkipObsoletePatchesCheck,
         bool $expectedIgnoreBranch
     ): void {
         $jsonFileProphecy = $this->prophesize(JsonFile::class);
@@ -60,6 +61,7 @@ final class ConfigTest extends TestCase
         self::assertCount($expectedPreferredInstallChangedCount, $config->getPreferredInstallChanged());
         self::assertSame($expectedPatchDirectory, $config->getPatchDirectory());
         self::assertSame($expectedIgnoreBranch, $config->getIgnoreBranch());
+        self::assertSame($expectedSkipObsoletePatchesCheck, $config->getSkipObsoletePatchesCheck());
     }
 
     /**
@@ -70,6 +72,7 @@ final class ConfigTest extends TestCase
      *   expectedAppliedChangesCount: int,
      *   expectedPreferredInstallChangedCount: int,
      *   expectedPatchDirectory: string,
+     *   expectedSkipObsoletePatchesCheck: bool,
      *   expectedIgnoreBranch: bool
      * }>
      */
@@ -115,6 +118,7 @@ final class ConfigTest extends TestCase
                         'preferred-install-changed' => ['package1', 'package2'],
                         'patch-directory' => 'patch-dir',
                         'ignore-branch' => true,
+                        'skip-obsolete-patches-check' => true,
                     ],
                 ],
             ],
@@ -123,6 +127,7 @@ final class ConfigTest extends TestCase
             'expectedAppliedChangesCount' => 2,
             'expectedPreferredInstallChangedCount' => 2,
             'expectedPatchDirectory' => 'patch-dir',
+            'expectedSkipObsoletePatchesCheck' => true,
             'expectedIgnoreBranch' => true,
         ];
         yield 'empty configuration' => [
@@ -132,6 +137,7 @@ final class ConfigTest extends TestCase
             'expectedAppliedChangesCount' => 0,
             'expectedPreferredInstallChangedCount' => 0,
             'expectedPatchDirectory' => 'patches',
+            'expectedSkipObsoletePatchesCheck' => false,
             'expectedIgnoreBranch' => false,
         ];
         yield 'empty extra' => [
@@ -141,6 +147,7 @@ final class ConfigTest extends TestCase
             'expectedAppliedChangesCount' => 0,
             'expectedPreferredInstallChangedCount' => 0,
             'expectedPatchDirectory' => 'patches',
+            'expectedSkipObsoletePatchesCheck' => false,
             'expectedIgnoreBranch' => false,
         ];
     }
