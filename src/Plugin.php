@@ -27,6 +27,7 @@ use Composer\Plugin\PluginInterface;
 use Composer\Script\Event;
 use Composer\Script\ScriptEvents;
 use GsTYPO3\CorePatches\Utility\ComposerUtils;
+use GsTYPO3\CorePatches\Utility\Utils;
 
 final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
 {
@@ -97,6 +98,10 @@ final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
     public function checkForObsoletePatches(InstallerEvent $installerEvent): void
     {
         if (!$installerEvent->getTransaction() instanceof Transaction) {
+            return;
+        }
+
+        if (Utils::isCI()) {
             return;
         }
 

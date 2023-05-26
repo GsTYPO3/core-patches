@@ -144,6 +144,8 @@ see <https://getcomposer.org/doc/06-config.md#discard-changes>. Run e.g.
 `composer config discard-changes true` to add the configuration to your
 `composer.json`.
 
+If a CI environment is detected, the detection of merged changes is skipped.
+
 If you need to disable this feature (e.g. because a firewall blocks access to
 <https://review.typo3.org> on a specific system), you can use
 
