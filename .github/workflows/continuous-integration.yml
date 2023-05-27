@@ -527,7 +527,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: logs
+          name: logs-${{ matrix.php-version }}-${{ matrix.dependencies }}
           path: var/log
           if-no-files-found: ignore
           retention-days: 5

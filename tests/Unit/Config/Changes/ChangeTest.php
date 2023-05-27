@@ -19,8 +19,8 @@ use GsTYPO3\CorePatches\Tests\Unit\TestCase;
 use Iterator;
 
 /**
- * @ covers \GsTYPO3\CorePatches\Config\Changes\Change
- * @ uses \GsTYPO3\CorePatches\Config\Packages
+ * @covers \GsTYPO3\CorePatches\Config\Changes\Change
+ * @uses \GsTYPO3\CorePatches\Config\Packages
  */
 final class ChangeTest extends TestCase
 {

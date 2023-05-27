@@ -112,7 +112,7 @@ final class Patches implements PersistenceInterface, IteratorAggregate, ArrayAcc
         $patches = [];
 
         foreach ($this->patches as $package => $packagePatches) {
-            $patches[$package] = $packagePatches/*->jsonSerialize()*/;
+            $patches[$package] = $packagePatches;
         }
 
         return $patches;

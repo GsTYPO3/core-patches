@@ -105,8 +105,8 @@ final class Changes implements PersistenceInterface, IteratorAggregate
     {
         $changes = [];
 
-        foreach ($this->changes as $number => $change) {
-            $changes[$number] = $change;
+        foreach ($this->changes as $change) {
+            $changes[$change->getNumber()] = $change;
         }
 
         return $changes;

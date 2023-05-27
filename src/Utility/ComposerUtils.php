@@ -87,14 +87,14 @@ final class ComposerUtils
     ): void {
         $changes = $this->config->load()->getChanges();
 
-        // Avoid saving the patch directory to the patches if default path is used.
-        if ($destination === $this->config->getPatchDirectory()) {
-            $destination = '';
-        }
-
         if ($changes->has($numericId)) {
             // the package is already listed, skip addition
             return;
+        }
+
+        // Avoid saving the patch directory to the patches if default path is used.
+        if ($destination === $this->config->getPatchDirectory()) {
+            $destination = '';
         }
 
         $changes->add($numericId, $packages, $includeTests, $destination, $revision);
@@ -487,7 +487,7 @@ final class ComposerUtils
 
     /**
      * @param  array<int, string> $changeIds
-     * @return int                The number of patches added
+     * @return int                The number of patches updated
      */
     public function updatePatches(array $changeIds): int
     {

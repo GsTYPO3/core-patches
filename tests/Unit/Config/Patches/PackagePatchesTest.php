@@ -18,7 +18,7 @@ use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 use GsTYPO3\CorePatches\Tests\Unit\TestCase;
 
 /**
- * @ covers \GsTYPO3\CorePatches\Config\Patches\PackagePatches
+ * @covers \GsTYPO3\CorePatches\Config\Patches\PackagePatches
  */
 final class PackagePatchesTest extends TestCase
 {

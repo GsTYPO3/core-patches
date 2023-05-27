@@ -17,8 +17,8 @@ use GsTYPO3\CorePatches\Gerrit\Entity\IncludedInInfo;
 use GsTYPO3\CorePatches\Tests\Unit\TestCase;
 
 /**
- * @ covers \GsTYPO3\CorePatches\Gerrit\Entity\IncludedInInfo
- * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
+ * @covers \GsTYPO3\CorePatches\Gerrit\Entity\IncludedInInfo
+ * @uses \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
  */
 final class IncludedInInfoTest extends TestCase
 {

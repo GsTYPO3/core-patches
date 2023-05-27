@@ -18,7 +18,7 @@ use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 use GsTYPO3\CorePatches\Tests\Unit\TestCase;
 
 /**
- * @ covers \GsTYPO3\CorePatches\Config\PreferredInstall
+ * @covers \GsTYPO3\CorePatches\Config\PreferredInstall
  */
 final class PreferredInstallTest extends TestCase
 {
@@ -64,7 +64,7 @@ final class PreferredInstallTest extends TestCase
     public function testRemove(): void
     {
         self::assertNull((new PreferredInstall())->remove('invalid-description'));
-        self::assertSame('install-method', (new PreferredInstall([
+        self::assertSame(['package' => 'install-method'], (new PreferredInstall([
             'package' => 'install-method',
         ]))->remove('package'));
 
@@ -74,23 +74,26 @@ final class PreferredInstallTest extends TestCase
             'package3' => 'install-method3',
         ]);
 
-        self::assertSame('install-method2', $preferredInstall->remove('package2'));
+        self::assertSame(['package2' => 'install-method2'], $preferredInstall->remove('package2'));
         self::assertSame(
             [
                 'package1' => 'install-method1',
-                'package2' => '',
                 'package3' => 'install-method3',
             ],
             $preferredInstall->jsonSerialize()
         );
 
-        self::assertSame('install-method1', $preferredInstall->remove('package1'));
+        self::assertSame(['package1' => 'install-method1'], $preferredInstall->remove('package1'));
         self::assertSame(
             [
-                'package1' => '',
-                'package2' => '',
                 'package3' => 'install-method3',
             ],
+            $preferredInstall->jsonSerialize()
+        );
+
+        self::assertSame(['package3' => 'install-method3'], $preferredInstall->remove('package3'));
+        self::assertSame(
+            [],
             $preferredInstall->jsonSerialize()
         );
     }

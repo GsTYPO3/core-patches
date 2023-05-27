@@ -17,15 +17,15 @@ use Composer\Command\BaseCommand;
 use GsTYPO3\CorePatches\CommandProvider;
 
 /**
- * @ covers \GsTYPO3\CorePatches\CommandProvider
- * @ uses \GsTYPO3\CorePatches\Command\Typo3\Patch\ApplyCommand
- * @ uses \GsTYPO3\CorePatches\Command\Typo3\Patch\RemoveCommand
- * @ uses \GsTYPO3\CorePatches\Command\Typo3\Patch\UpdateCommand
- * @ uses \GsTYPO3\CorePatches\Config
- * @ uses \GsTYPO3\CorePatches\Config\Changes
- * @ uses \GsTYPO3\CorePatches\Config\Packages
- * @ uses \GsTYPO3\CorePatches\Config\Patches
- * @ uses \GsTYPO3\CorePatches\Config\PreferredInstall
+ * @covers \GsTYPO3\CorePatches\CommandProvider
+ * @uses \GsTYPO3\CorePatches\Command\Typo3\Patch\ApplyCommand
+ * @uses \GsTYPO3\CorePatches\Command\Typo3\Patch\RemoveCommand
+ * @uses \GsTYPO3\CorePatches\Command\Typo3\Patch\UpdateCommand
+ * @uses \GsTYPO3\CorePatches\Config
+ * @uses \GsTYPO3\CorePatches\Config\Changes
+ * @uses \GsTYPO3\CorePatches\Config\Packages
+ * @uses \GsTYPO3\CorePatches\Config\Patches
+ * @uses \GsTYPO3\CorePatches\Config\PreferredInstall
  */
 final class CommandProviderTest extends TestCase
 {
