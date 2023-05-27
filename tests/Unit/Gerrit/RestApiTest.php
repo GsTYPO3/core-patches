@@ -14,15 +14,31 @@ declare(strict_types=1);
 namespace GsTYPO3\CorePatches\Tests\Unit\Gerrit;
 
 use Composer\Config;
+use Composer\Downloader\TransportException;
 use Composer\Factory;
 use Composer\IO\BufferIO;
+use Composer\Util\Http\Response;
+use Composer\Util\HttpDownloader;
+use Exception;
+use GsTYPO3\CorePatches\Exception\InvalidResponseException;
+use GsTYPO3\CorePatches\Exception\UnexpectedResponseException;
 use GsTYPO3\CorePatches\Gerrit\RestApi;
 use GsTYPO3\CorePatches\Tests\Unit\TestCase;
 use Iterator;
+use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
 use RuntimeException;
 
+/**
+ * @ covers \GsTYPO3\CorePatches\Gerrit\RestApi
+ * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
+ * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\ChangeInfo
+ * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\IncludedInInfo
+ */
 final class RestApiTest extends TestCase
 {
+    use ProphecyTrait;
+
     private string $previousWorkingDir;
 
     private string $testWorkingDir;
@@ -69,6 +85,7 @@ final class RestApiTest extends TestCase
         string $id,
         string $changeId,
         string $subject,
+        string $subjectNormalized,
         int $number
     ): void {
         $changeInfo = $this->gerritRestApi->getChange($rawChangeId);
@@ -77,10 +94,20 @@ final class RestApiTest extends TestCase
         self::assertSame($changeId, $changeInfo->changeId);
         self::assertSame($subject, $changeInfo->subject);
         self::assertSame($number, $changeInfo->number);
+
+        self::assertSame($subjectNormalized, $this->gerritRestApi->getSubject($rawChangeId));
+        self::assertSame($number, $this->gerritRestApi->getNumericId($rawChangeId));
     }
 
     /**
-     * @return Iterator<string, array<string, array<int, string>|int|string|bool>>
+     * @return Iterator<string, array{
+     *   rawChangeId: string,
+     *   id: string,
+     *   changeId: string,
+     *   subject: string,
+     *   subjectNormalized: string,
+     *   number: int,
+     * }>
      */
     public function changeIdsProvider(): Iterator
     {
@@ -89,6 +116,7 @@ final class RestApiTest extends TestCase
             'id' => 'Packages%2FTYPO3.CMS~main~I84baa3df4b3a96cacbb3e686e4c85562d67422df',
             'changeId' => 'I84baa3df4b3a96cacbb3e686e4c85562d67422df',
             'subject' => '[TASK] Test change for gilbertsoft/typo3-core-patches',
+            'subjectNormalized' => 'Test change for gilbertsoft/typo3-core-patches',
             'number' => 73021,
         ];
         yield 'change url' => [
@@ -96,7 +124,97 @@ final class RestApiTest extends TestCase
             'id' => 'Packages%2FTYPO3.CMS~main~I84baa3df4b3a96cacbb3e686e4c85562d67422df',
             'changeId' => 'I84baa3df4b3a96cacbb3e686e4c85562d67422df',
             'subject' => '[TASK] Test change for gilbertsoft/typo3-core-patches',
+            'subjectNormalized' => 'Test change for gilbertsoft/typo3-core-patches',
             'number' => 73021,
         ];
+    }
+
+    public function testGetIncludedIn(): void
+    {
+        $includedInInfo = $this->gerritRestApi->getIncludedIn('73021');
+
+        self::assertSame([], $includedInInfo->branches);
+        self::assertSame([], $includedInInfo->tags);
+        self::assertSame([], $includedInInfo->external);
+    }
+
+    public function testGetPatch(): void
+    {
+        self::assertStringContainsString(
+            'Subject: [PATCH] [TASK] Test change for gilbertsoft/typo3-core-patches',
+            $this->gerritRestApi->getPatch('73021')
+        );
+    }
+
+    public function testGetPatchProperlyHandlesNonBase64Responses(): void
+    {
+        $responseProphecy = $this->prophesize(Response::class);
+        $responseProphecy->getBody()->willReturn('invalid base64');
+
+        $httpDownloaderProphecy = $this->prophesize(HttpDownloader::class);
+        $httpDownloaderProphecy->get(
+            Argument::type('string'),
+            Argument::type('array')
+        )->willReturn($responseProphecy->reveal());
+
+        $restApi = new RestApi($httpDownloaderProphecy->reveal());
+
+        $this->expectException(InvalidResponseException::class);
+        $this->expectExceptionCode(0);
+        $this->expectExceptionMessage('Error invalid response.');
+
+        $restApi->getPatch('12345');
+    }
+
+    public function testTransportExceptionIsProperlyForwarded(): void
+    {
+        $objectProphecy = $this->prophesize(HttpDownloader::class);
+        $objectProphecy->get(Argument::type('string'), Argument::type('array'))->willThrow(
+            new TransportException('Test TransportException')
+        );
+
+        $restApi = new RestApi($objectProphecy->reveal());
+
+        $this->expectException(UnexpectedResponseException::class);
+        $this->expectExceptionCode(0);
+        $this->expectExceptionMessage('Test TransportException');
+
+        $restApi->getPatch('12345');
+    }
+
+    public function testOtherExceptionIsProperlyForwarded(): void
+    {
+        $objectProphecy = $this->prophesize(HttpDownloader::class);
+        $objectProphecy->get(Argument::type('string'), Argument::type('array'))->willThrow(
+            new Exception('Test Exception')
+        );
+
+        $restApi = new RestApi($objectProphecy->reveal());
+
+        $this->expectException(UnexpectedResponseException::class);
+        $this->expectExceptionCode(0);
+        $this->expectExceptionMessage('Test Exception');
+
+        $restApi->getPatch('12345');
+    }
+
+    public function testWrongBodyType(): void
+    {
+        $responseProphecy = $this->prophesize(Response::class);
+        $responseProphecy->getBody()->willReturn(null);
+
+        $httpDownloaderProphecy = $this->prophesize(HttpDownloader::class);
+        $httpDownloaderProphecy->get(
+            Argument::type('string'),
+            Argument::type('array')
+        )->willReturn($responseProphecy->reveal());
+
+        $restApi = new RestApi($httpDownloaderProphecy->reveal());
+
+        $this->expectException(InvalidResponseException::class);
+        $this->expectExceptionCode(0);
+        $this->expectExceptionMessage('Unexpected response "NULL".');
+
+        $restApi->getPatch('12345');
     }
 }

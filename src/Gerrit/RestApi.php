@@ -79,7 +79,9 @@ final class RestApi
         $subject = $this->getChange($changeId)->subject;
 
         if (($normalizedSubject = preg_replace('#^\[.+?\] #', '', $subject)) === null) {
+            // @codeCoverageIgnoreStart
             throw new UnexpectedValueException(sprintf('Subject "%s" could not be normalized.', $subject));
+            // @codeCoverageIgnoreEnd
         }
 
         return $normalizedSubject;
