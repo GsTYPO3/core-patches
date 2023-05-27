@@ -13,18 +13,18 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches\Tests\Unit\Config;
 
-use GsTYPO3\CorePatches\Config;
 use GsTYPO3\CorePatches\Config\PreferredInstall;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 use GsTYPO3\CorePatches\Tests\Unit\TestCase;
 
+/**
+ * @ covers \GsTYPO3\CorePatches\Config\PreferredInstall
+ */
 final class PreferredInstallTest extends TestCase
 {
     public function testItemsAreAddedDuringConstruction(): void
     {
-        $config = new Config();
-
-        self::assertCount(3, new PreferredInstall($config, [
+        self::assertCount(3, new PreferredInstall([
             'package1' => 'install-method1',
             'package2' => 'install-method2',
             'package3' => 'install-method3',
@@ -33,15 +33,13 @@ final class PreferredInstallTest extends TestCase
 
     public function testItemsAreReordered(): void
     {
-        $config = new Config();
-
         self::assertSame(
             [
                 'package1' => 'install-method1',
                 'package2' => 'install-method2',
                 'package3' => 'install-method3',
             ],
-            (new PreferredInstall($config, [
+            (new PreferredInstall([
                 'package1' => 'install-method1',
                 'package2' => 'install-method2',
                 'package3' => 'install-method3',
@@ -49,24 +47,28 @@ final class PreferredInstallTest extends TestCase
         );
     }
 
+    public function testHas(): void
+    {
+        self::assertFalse((new PreferredInstall())->has('package', 'install-method'));
+        self::assertTrue(
+            (new PreferredInstall(['package' => 'install-method']))->has('package', 'install-method')
+        );
+    }
+
     public function testIsEmpty(): void
     {
-        $config = new Config();
-
-        self::assertTrue((new PreferredInstall($config))->isEmpty());
-        self::assertFalse((new PreferredInstall($config, ['package' => 'install-method']))->isEmpty());
+        self::assertTrue((new PreferredInstall())->isEmpty());
+        self::assertFalse((new PreferredInstall(['package' => 'install-method']))->isEmpty());
     }
 
     public function testRemove(): void
     {
-        $config = new Config();
-
-        self::assertNull((new PreferredInstall($config))->remove('invalid-description'));
-        self::assertSame('install-method', (new PreferredInstall($config, [
+        self::assertNull((new PreferredInstall())->remove('invalid-description'));
+        self::assertSame('install-method', (new PreferredInstall([
             'package' => 'install-method',
         ]))->remove('package'));
 
-        $preferredInstall = new PreferredInstall($config, [
+        $preferredInstall = new PreferredInstall([
             'package1' => 'install-method1',
             'package2' => 'install-method2',
             'package3' => 'install-method3',
@@ -93,27 +95,15 @@ final class PreferredInstallTest extends TestCase
         );
     }
 
-    public function testGetConfig(): void
-    {
-        $config = new Config();
-
-        self::assertSame(
-            $config,
-            (new PreferredInstall($config))->getConfig()
-        );
-    }
-
     public function testJsonSerialize(): void
     {
-        $config = new Config();
-
         self::assertSame(
             [
                 'package1' => 'install-method1',
                 'package2' => 'install-method2',
                 'package3' => 'install-method3',
             ],
-            (new PreferredInstall($config, [
+            (new PreferredInstall([
                 'package1' => 'install-method1',
                 'package2' => 'install-method2',
                 'package3' => 'install-method3',
@@ -123,9 +113,7 @@ final class PreferredInstallTest extends TestCase
 
     public function testJsonUnserialize(): void
     {
-        $config = new Config();
-
-        $preferredInstall = new PreferredInstall($config);
+        $preferredInstall = new PreferredInstall();
 
         self::assertSame(
             [
@@ -153,19 +141,15 @@ final class PreferredInstallTest extends TestCase
 
     public function testJsonUnserializeThrowsOnInvalidPackageType(): void
     {
-        $config = new Config();
-
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('Package is not a string (1).');
-        (new PreferredInstall($config))->jsonUnserialize([1 => 'install-method']);
+        (new PreferredInstall())->jsonUnserialize([1 => 'install-method']);
     }
 
     public function testJsonUnserializeThrowsOnInvalidInstallMethodType(): void
     {
-        $config = new Config();
-
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('Install method is not a string (1).');
-        (new PreferredInstall($config))->jsonUnserialize(['package' => 1]);
+        (new PreferredInstall())->jsonUnserialize(['package' => 1]);
     }
 }
