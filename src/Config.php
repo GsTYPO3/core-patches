@@ -52,17 +52,26 @@ final class Config implements PersistenceInterface
     /**
      * @var string
      */
-    private const CHANGES = 'applied-changes';
+    private const PLUGIN_CHANGES = 'applied-changes';
 
     /**
      * @var string
      */
-    private const PREFERRED_INSTALL_CHANGED = 'preferred-install-changed';
+    private const PLUGIN_PREFERRED_INSTALL_CHANGED = 'preferred-install-changed';
 
     /**
      * @var string
      */
-    private const PATCH_DIRECTORY = 'patch-directory';
+    private const PLUGIN_PATCH_DIRECTORY = 'patch-directory';
+
+    /**
+     * @var string
+     */
+    private const DEFAULT_PATCH_DIRECTORY = 'patches';
+
+    private JsonFile $jsonFile;
+
+    private JsonConfigSource $jsonConfigSource;
 
     private Changes $changes;
 
@@ -74,12 +83,15 @@ final class Config implements PersistenceInterface
 
     private Patches $patches;
 
-    public function __construct()
+    public function __construct(?JsonFile $jsonFile = null, ?JsonConfigSource $jsonConfigSource = null)
     {
-        $this->changes = new Changes($this);
-        $this->preferredInstallChanged = new PreferredInstallChanged($this);
-        $this->preferredInstall = new PreferredInstall($this);
-        $this->patches = new Patches($this);
+        $this->jsonFile = $jsonFile ?? new JsonFile(Factory::getComposerFile());
+        $this->jsonConfigSource = $jsonConfigSource ?? new JsonConfigSource($this->jsonFile);
+
+        $this->changes = new Changes();
+        $this->preferredInstallChanged = new PreferredInstallChanged();
+        $this->preferredInstall = new PreferredInstall();
+        $this->patches = new Patches();
     }
 
     public function getChanges(): Changes
@@ -95,7 +107,7 @@ final class Config implements PersistenceInterface
     public function getPatchDirectory(): string
     {
         if ($this->patchDirectory === '') {
-            return 'patches';
+            return self::DEFAULT_PATCH_DIRECTORY;
         }
 
         return $this->patchDirectory;
@@ -131,13 +143,9 @@ final class Config implements PersistenceInterface
         return $this->patchDirectory === '';
     }
 
-    public function load(?JsonFile $jsonFile = null): self
+    public function load(): self
     {
-        if (!$jsonFile instanceof JsonFile) {
-            $jsonFile = new JsonFile(Factory::getComposerFile());
-        }
-
-        if (!is_array($config = $jsonFile->read())) {
+        if (!is_array($config = $this->jsonFile->read())) {
             $config = [];
         }
 
@@ -146,14 +154,8 @@ final class Config implements PersistenceInterface
         return $this;
     }
 
-    public function save(?JsonFile $jsonFile = null): self
+    public function save(): self
     {
-        if (!$jsonFile instanceof JsonFile) {
-            $jsonFile = new JsonFile(Factory::getComposerFile());
-        }
-
-        $jsonConfigSource = new JsonConfigSource($jsonFile);
-
         // Save preferred-install
         foreach ($this->preferredInstall as $packageName => $installMethod) {
             $name = sprintf(
@@ -163,9 +165,9 @@ final class Config implements PersistenceInterface
             );
 
             if ($installMethod === '') {
-                $jsonConfigSource->removeConfigSetting($name);
+                $this->jsonConfigSource->removeConfigSetting($name);
             } else {
-                $jsonConfigSource->addConfigSetting($name, $installMethod);
+                $this->jsonConfigSource->addConfigSetting($name, $installMethod);
             }
         }
 
@@ -177,9 +179,9 @@ final class Config implements PersistenceInterface
         );
 
         if ($this->patches->isEmpty()) {
-            $jsonConfigSource->removeProperty($name);
+            $this->jsonConfigSource->removeProperty($name);
         } else {
-            $jsonConfigSource->addProperty($name, $this->patches);
+            $this->jsonConfigSource->addProperty($name, $this->patches);
         }
 
         // Save plugin configuration
@@ -190,14 +192,14 @@ final class Config implements PersistenceInterface
         );
 
         if ($this->isEmpty()) {
-            $jsonConfigSource->removeProperty($name);
+            $this->jsonConfigSource->removeProperty($name);
         } else {
-            $jsonConfigSource->addProperty($name, $this);
+            $this->jsonConfigSource->addProperty($name, $this);
         }
 
-        // Rewrite configuration to enforce correct formating
-        if (is_array($rawConfig = $jsonFile->read())) {
-            $jsonFile->write($rawConfig);
+        // Rewrite configuration to enforce correct formatting
+        if (is_array($rawConfig = $this->jsonFile->read())) {
+            $this->jsonFile->write($rawConfig);
         }
 
         return $this;
@@ -216,15 +218,15 @@ final class Config implements PersistenceInterface
         $config = [];
 
         if (!$this->changes->isEmpty()) {
-            $config[self::CHANGES] = $this->changes;
+            $config[self::PLUGIN_CHANGES] = $this->changes;
         }
 
         if (!$this->preferredInstallChanged->isEmpty()) {
-            $config[self::PREFERRED_INSTALL_CHANGED] = $this->preferredInstallChanged;
+            $config[self::PLUGIN_PREFERRED_INSTALL_CHANGED] = $this->preferredInstallChanged;
         }
 
-        if ($this->patchDirectory !== '') {
-            $config[self::PATCH_DIRECTORY] = $this->patchDirectory;
+        if ($this->patchDirectory !== '' && $this->patchDirectory !== self::DEFAULT_PATCH_DIRECTORY) {
+            $config[self::PLUGIN_PATCH_DIRECTORY] = $this->patchDirectory;
         }
 
         return $config;
@@ -262,19 +264,19 @@ final class Config implements PersistenceInterface
             $packageConfig = [];
         }
 
-        if (!is_array($changes = $packageConfig[self::CHANGES] ?? null)) {
+        if (!is_array($changes = $packageConfig[self::PLUGIN_CHANGES] ?? null)) {
             $changes = [];
         }
 
         $this->changes->jsonUnserialize($changes);
 
-        if (!is_array($preferredInstallChanged = $packageConfig[self::PREFERRED_INSTALL_CHANGED] ?? null)) {
+        if (!is_array($preferredInstallChanged = $packageConfig[self::PLUGIN_PREFERRED_INSTALL_CHANGED] ?? null)) {
             $preferredInstallChanged = [];
         }
 
         $this->preferredInstallChanged->jsonUnserialize($preferredInstallChanged);
 
-        if (!is_string($patchDirectory = $packageConfig[self::PATCH_DIRECTORY] ?? null)) {
+        if (!is_string($patchDirectory = $packageConfig[self::PLUGIN_PATCH_DIRECTORY] ?? null)) {
             $patchDirectory = '';
         }
 

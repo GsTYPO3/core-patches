@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches\Config;
 
-use GsTYPO3\CorePatches\Config;
+use ArrayAccess;
 use GsTYPO3\CorePatches\Config\Patches\PackagePatches;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 use Iterator;
@@ -21,11 +21,10 @@ use IteratorAggregate;
 
 /**
  * @implements IteratorAggregate<string, PackagePatches>
+ * @implements ArrayAccess<string, PackagePatches>
  */
-final class Patches implements ConfigAwareInterface, PersistenceInterface, IteratorAggregate
+final class Patches implements PersistenceInterface, IteratorAggregate, ArrayAccess
 {
-    private Config $config;
-
     /**
      * @var array<string, PackagePatches>
      */
@@ -35,11 +34,8 @@ final class Patches implements ConfigAwareInterface, PersistenceInterface, Itera
      * @param iterable<string, PackagePatches> $patches
      */
     public function __construct(
-        Config $config,
         iterable $patches = []
     ) {
-        $this->config = $config;
-
         foreach ($patches as $package => $patch) {
             $this->put($package, $patch);
         }
@@ -52,7 +48,7 @@ final class Patches implements ConfigAwareInterface, PersistenceInterface, Itera
         string $package,
         iterable $patches
     ): PackagePatches {
-        $packagePatches = new PackagePatches($this->config, /*$package,*/ $patches);
+        $packagePatches = new PackagePatches($patches);
 
         $this->put($package, $packagePatches);
 
@@ -104,14 +100,6 @@ final class Patches implements ConfigAwareInterface, PersistenceInterface, Itera
     }
 
     /**
-     * @inheritDoc
-     */
-    public function getConfig(): Config
-    {
-        return $this->config;
-    }
-
-    /**
      * Returns a representation that can be natively converted to JSON, which is
      * called when invoking json_encode.
      *
@@ -146,7 +134,7 @@ final class Patches implements ConfigAwareInterface, PersistenceInterface, Itera
                 throw new UnexpectedValueException(sprintf('Patches is not an array (%s).', gettype($patches)));
             }
 
-            $packagePatches = new PackagePatches($this->config);
+            $packagePatches = new PackagePatches();
             $packagePatches->jsonUnserialize($patches);
 
             $this->put($package, $packagePatches);
@@ -163,5 +151,25 @@ final class Patches implements ConfigAwareInterface, PersistenceInterface, Itera
         foreach ($this->patches as $package => $patches) {
             yield $package => $patches;
         }
+    }
+
+    public function offsetExists($offset): bool
+    {
+        return array_key_exists($offset, $this->patches);
+    }
+
+    public function offsetGet($offset): PackagePatches
+    {
+        return $this->patches[$offset];
+    }
+
+    public function offsetSet($offset, $value): void
+    {
+        $this->patches[$offset] = $value;
+    }
+
+    public function offsetUnset($offset): void
+    {
+        unset($this->patches[$offset]);
     }
 }

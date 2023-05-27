@@ -13,8 +13,7 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches\Config\Patches;
 
-use GsTYPO3\CorePatches\Config;
-use GsTYPO3\CorePatches\Config\ConfigAwareInterface;
+use Countable;
 use GsTYPO3\CorePatches\Config\PersistenceInterface;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
 use Iterator;
@@ -23,10 +22,8 @@ use IteratorAggregate;
 /**
  * @implements IteratorAggregate<string, string>
  */
-final class PackagePatches implements ConfigAwareInterface, PersistenceInterface, IteratorAggregate
+final class PackagePatches implements PersistenceInterface, IteratorAggregate, Countable
 {
-    private Config $config;
-
     /**
      * @var array<string, string>
      */
@@ -36,11 +33,8 @@ final class PackagePatches implements ConfigAwareInterface, PersistenceInterface
      * @param iterable<string, string> $patches
      */
     public function __construct(
-        Config $config,
         iterable $patches = []
     ) {
-        $this->config = $config;
-
         foreach ($patches as $description => $patch) {
             $this->add($description, $patch);
         }
@@ -76,14 +70,6 @@ final class PackagePatches implements ConfigAwareInterface, PersistenceInterface
     public function remove(string $description): ?string
     {
         return ($index = $this->find($description)) > -1 ? array_splice($this->patches, $index, 1)[$description] : null;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getConfig(): Config
-    {
-        return $this->config;
     }
 
     /**
@@ -135,5 +121,10 @@ final class PackagePatches implements ConfigAwareInterface, PersistenceInterface
         foreach ($this->patches as $description => $patch) {
             yield $description => $patch;
         }
+    }
+
+    public function count(): int
+    {
+        return count($this->patches);
     }
 }
