@@ -21,13 +21,13 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
- * @ covers \GsTYPO3\CorePatches\Config
- * @ uses \GsTYPO3\CorePatches\Config\Changes
- * @ uses \GsTYPO3\CorePatches\Config\Changes\Change
- * @ uses \GsTYPO3\CorePatches\Config\Packages
- * @ uses \GsTYPO3\CorePatches\Config\Patches
- * @ uses \GsTYPO3\CorePatches\Config\Patches\PackagePatches
- * @ uses \GsTYPO3\CorePatches\Config\PreferredInstall
+ * @covers \GsTYPO3\CorePatches\Config
+ * @uses \GsTYPO3\CorePatches\Config\Changes
+ * @uses \GsTYPO3\CorePatches\Config\Changes\Change
+ * @uses \GsTYPO3\CorePatches\Config\Packages
+ * @uses \GsTYPO3\CorePatches\Config\Patches
+ * @uses \GsTYPO3\CorePatches\Config\Patches\PackagePatches
+ * @uses \GsTYPO3\CorePatches\Config\PreferredInstall
  */
 final class ConfigTest extends TestCase
 {
@@ -443,6 +443,32 @@ final class ConfigTest extends TestCase
                             2 => 'package3',
                         ],
                         'patch-directory' => 'patch-dir',
+                    ],
+                ],
+            ],
+        ];
+        yield 'preferred-install-changed only configuration' => [
+            'configuration' => [
+                'name' => 'test-vendor/test-package',
+                'extra' => [
+                    'gilbertsoft/typo3-core-patches' => [
+                        'preferred-install-changed' => [
+                            0 => 'package1',
+                            1 => 'package2',
+                            3 => 'package3',
+                        ],
+                    ],
+                ],
+            ],
+            'expectedConfiguration' => [
+                'name' => 'test-vendor/test-package',
+                'extra' => [
+                    'gilbertsoft/typo3-core-patches' => [
+                        'preferred-install-changed' => [
+                            0 => 'package1',
+                            1 => 'package2',
+                            2 => 'package3',
+                        ],
                     ],
                 ],
             ],

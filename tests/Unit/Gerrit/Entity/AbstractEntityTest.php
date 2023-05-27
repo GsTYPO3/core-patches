@@ -18,7 +18,7 @@ use stdClass;
 use UnexpectedValueException;
 
 /**
- * @ covers \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
+ * @covers \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
  */
 final class AbstractEntityTest extends TestCase
 {

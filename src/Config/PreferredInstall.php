@@ -74,13 +74,16 @@ final class PreferredInstall implements PersistenceInterface, IteratorAggregate
         return $this->preferredInstall === [];
     }
 
-    public function remove(string $packageName): ?string
+    /**
+     * @return array<string, string>|null
+     */
+    public function remove(string $packageName): ?array
     {
         if (isset($this->preferredInstall[$packageName])) {
             $installMethod = $this->preferredInstall[$packageName];
-            $this->preferredInstall[$packageName] = '';
+            unset($this->preferredInstall[$packageName]);
 
-            return $installMethod;
+            return [$packageName => $installMethod];
         }
 
         return null;

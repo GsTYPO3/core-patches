@@ -17,8 +17,8 @@ use GsTYPO3\CorePatches\Gerrit\Entity\ChangeInfo;
 use GsTYPO3\CorePatches\Tests\Unit\TestCase;
 
 /**
- * @ covers \GsTYPO3\CorePatches\Gerrit\Entity\ChangeInfo
- * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
+ * @covers \GsTYPO3\CorePatches\Gerrit\Entity\ChangeInfo
+ * @uses \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
  */
 final class ChangeInfoTest extends TestCase
 {

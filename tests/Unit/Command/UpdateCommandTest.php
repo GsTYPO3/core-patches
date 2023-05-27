@@ -18,18 +18,19 @@ use RuntimeException;
 use Throwable;
 
 /**
- * @ covers \GsTYPO3\CorePatches\Command\Typo3\Patch\UpdateCommand
- * @ uses \GsTYPO3\CorePatches\CommandProvider
- * @ uses \GsTYPO3\CorePatches\Command\Typo3\Patch\ApplyCommand
- * @ uses \GsTYPO3\CorePatches\Command\Typo3\Patch\RemoveCommand
- * @ uses \GsTYPO3\CorePatches\Config
- * @ uses \GsTYPO3\CorePatches\Config\Changes
- * @ uses \GsTYPO3\CorePatches\Config\Packages
- * @ uses \GsTYPO3\CorePatches\Config\Patches
- * @ uses \GsTYPO3\CorePatches\Config\PreferredInstall
- * @ uses \GsTYPO3\CorePatches\Gerrit\RestApi
- * @ uses \GsTYPO3\CorePatches\Utility\ComposerUtils
- * @ uses \GsTYPO3\CorePatches\Utility\PatchUtils
+ * @long
+ * @covers \GsTYPO3\CorePatches\Command\Typo3\Patch\UpdateCommand
+ * @uses \GsTYPO3\CorePatches\CommandProvider
+ * @uses \GsTYPO3\CorePatches\Command\Typo3\Patch\ApplyCommand
+ * @uses \GsTYPO3\CorePatches\Command\Typo3\Patch\RemoveCommand
+ * @uses \GsTYPO3\CorePatches\Config
+ * @uses \GsTYPO3\CorePatches\Config\Changes
+ * @uses \GsTYPO3\CorePatches\Config\Packages
+ * @uses \GsTYPO3\CorePatches\Config\Patches
+ * @uses \GsTYPO3\CorePatches\Config\PreferredInstall
+ * @uses \GsTYPO3\CorePatches\Gerrit\RestApi
+ * @uses \GsTYPO3\CorePatches\Utility\ComposerUtils
+ * @uses \GsTYPO3\CorePatches\Utility\PatchUtils
  */
 final class UpdateCommandTest extends CommandTestCase
 {

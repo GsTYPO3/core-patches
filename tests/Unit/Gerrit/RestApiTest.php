@@ -30,10 +30,11 @@ use Prophecy\PhpUnit\ProphecyTrait;
 use RuntimeException;
 
 /**
- * @ covers \GsTYPO3\CorePatches\Gerrit\RestApi
- * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
- * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\ChangeInfo
- * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\IncludedInInfo
+ * @medium
+ * @covers \GsTYPO3\CorePatches\Gerrit\RestApi
+ * @uses \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
+ * @uses \GsTYPO3\CorePatches\Gerrit\Entity\ChangeInfo
+ * @uses \GsTYPO3\CorePatches\Gerrit\Entity\IncludedInInfo
  */
 final class RestApiTest extends TestCase
 {
