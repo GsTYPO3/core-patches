@@ -43,6 +43,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
  * @uses \GsTYPO3\CorePatches\Gerrit\Entity\IncludedInInfo
  * @uses \GsTYPO3\CorePatches\Gerrit\RestApi
  * @uses \GsTYPO3\CorePatches\Utility\PatchUtils
+ * @uses \GsTYPO3\CorePatches\Utility\Utils
  */
 final class ComposerUtilsTest extends TestCase
 {

@@ -37,6 +37,7 @@ use Throwable;
  * @uses \GsTYPO3\CorePatches\Plugin
  * @uses \GsTYPO3\CorePatches\Utility\ComposerUtils
  * @uses \GsTYPO3\CorePatches\Utility\PatchUtils
+ * @uses \GsTYPO3\CorePatches\Utility\Utils
  */
 final class ApplyCommandTest extends CommandTestCase
 {

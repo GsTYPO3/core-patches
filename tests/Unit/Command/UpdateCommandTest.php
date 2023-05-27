@@ -31,6 +31,7 @@ use Throwable;
  * @uses \GsTYPO3\CorePatches\Gerrit\RestApi
  * @uses \GsTYPO3\CorePatches\Utility\ComposerUtils
  * @uses \GsTYPO3\CorePatches\Utility\PatchUtils
+ * @uses \GsTYPO3\CorePatches\Utility\Utils
  */
 final class UpdateCommandTest extends CommandTestCase
 {
