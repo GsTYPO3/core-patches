@@ -2,11 +2,12 @@
 
 [![Packagist Version](https://img.shields.io/packagist/v/gilbertsoft/typo3-core-patches)](https://packagist.org/packages/gilbertsoft/typo3-core-patches)
 [![Packagist PHP Version Support](https://img.shields.io/packagist/php-v/gilbertsoft/typo3-core-patches)](https://packagist.org/packages/gilbertsoft/typo3-core-patches)
+[![Packagist Downloads](https://img.shields.io/packagist/dt/gilbertsoft/typo3-core-patches)](https://packagist.org/packages/gilbertsoft/typo3-core-patches)
 [![GitHub issues](https://img.shields.io/github/issues/GsTYPO3/core-patches)](https://github.com/GsTYPO3/core-patches/issues)
 [![GitHub forks](https://img.shields.io/github/forks/GsTYPO3/core-patches)](https://github.com/GsTYPO3/core-patches/network)
 [![GitHub stars](https://img.shields.io/github/stars/GsTYPO3/core-patches)](https://github.com/GsTYPO3/core-patches/stargazers)
 [![GitHub license](https://img.shields.io/github/license/GsTYPO3/core-patches)](https://github.com/GsTYPO3/core-patches/blob/main/LICENSE)
-[![GitHub build](https://img.shields.io/github/workflow/status/GsTYPO3/core-patches/Continuous%20Integration%20(CI))](https://github.com/GsTYPO3/core-patches/actions/workflows/continuous-integration.yml)
+[![GitHub build](https://img.shields.io/github/actions/workflow/status/GsTYPO3/core-patches/continuous-integration.yml?branch=main)](https://github.com/GsTYPO3/core-patches/actions/workflows/continuous-integration.yml)
 [![Coveralls](https://img.shields.io/coveralls/github/GsTYPO3/core-patches)](https://coveralls.io/github/GsTYPO3/core-patches)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](https://github.com/GsTYPO3/core-patches/blob/main/CODE_OF_CONDUCT.md)
 
