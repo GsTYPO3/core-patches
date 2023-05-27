@@ -15,6 +15,8 @@ namespace GsTYPO3\CorePatches\Gerrit\Entity;
 
 use Composer\Json\JsonFile;
 use GsTYPO3\CorePatches\Exception\UnexpectedValueException;
+use stdClass;
+use Throwable;
 
 abstract class AbstractEntity
 {
@@ -43,22 +45,22 @@ abstract class AbstractEntity
     /**
      * @throws UnexpectedValueException
      */
-    protected static function jsonToObject(string $json): object
+    protected static function jsonToObject(string $json): stdClass
     {
-        // Not the best solution regarding performance but the cleanest way as
-        // long as JsonFile does not allow to return objects.
-        $object = json_decode(
-            json_encode(
-                JsonFile::parseJson($json),
+        try {
+            // Not the best solution regarding performance but the cleanest way as
+            // long as JsonFile does not allow to return objects.
+            $object = (object)json_decode(
+                json_encode(
+                    JsonFile::parseJson($json),
+                    JSON_THROW_ON_ERROR
+                ),
+                true,
+                512,
                 JSON_THROW_ON_ERROR
-            ),
-            false,
-            512,
-            JSON_THROW_ON_ERROR
-        );
-
-        if (!is_object($object)) {
-            throw new UnexpectedValueException('Invalid JSON data.');
+            );
+        } catch (Throwable $throwable) {
+            throw new UnexpectedValueException('Invalid JSON data.', 0, $throwable);
         }
 
         return $object;
