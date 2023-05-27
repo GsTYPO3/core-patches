@@ -18,9 +18,6 @@ use GsTYPO3\CorePatches\Command\Typo3\Patch\ApplyCommand;
 use GsTYPO3\CorePatches\Command\Typo3\Patch\RemoveCommand;
 use GsTYPO3\CorePatches\Command\Typo3\Patch\UpdateCommand;
 
-/**
- * @codeCoverageIgnore
- */
 final class CommandProvider implements CommandProviderCapability
 {
     /**
