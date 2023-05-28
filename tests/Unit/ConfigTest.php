@@ -44,7 +44,9 @@ final class ConfigTest extends TestCase
         int $expectedAppliedChangesCount,
         int $expectedPreferredInstallChangedCount,
         string $expectedPatchDirectory,
-        bool $expectedIgnoreBranch
+        bool $expectedIgnoreBranch,
+        bool $expectedDisableTidyPatches,
+        bool $expectedForceTidyPatches
     ): void {
         $jsonFileProphecy = $this->prophesize(JsonFile::class);
         $jsonFileProphecy->read()->willReturn($configuration);
@@ -60,6 +62,8 @@ final class ConfigTest extends TestCase
         self::assertCount($expectedPreferredInstallChangedCount, $config->getPreferredInstallChanged());
         self::assertSame($expectedPatchDirectory, $config->getPatchDirectory());
         self::assertSame($expectedIgnoreBranch, $config->getIgnoreBranch());
+        self::assertSame($expectedDisableTidyPatches, $config->getDisableTidyPatches());
+        self::assertSame($expectedForceTidyPatches, $config->getForceTidyPatches());
     }
 
     /**
@@ -70,7 +74,9 @@ final class ConfigTest extends TestCase
      *   expectedAppliedChangesCount: int,
      *   expectedPreferredInstallChangedCount: int,
      *   expectedPatchDirectory: string,
-     *   expectedIgnoreBranch: bool
+     *   expectedIgnoreBranch: bool,
+     *   expectedDisableTidyPatches: bool,
+     *   expectedForceTidyPatches: bool
      * }>
      */
     public function configurationLoadProvider(): Iterator
@@ -115,6 +121,8 @@ final class ConfigTest extends TestCase
                         'preferred-install-changed' => ['package1', 'package2'],
                         'patch-directory' => 'patch-dir',
                         'ignore-branch' => true,
+                        'disable-tidy-patches' => true,
+                        'force-tidy-patches' => true,
                     ],
                 ],
             ],
@@ -124,6 +132,8 @@ final class ConfigTest extends TestCase
             'expectedPreferredInstallChangedCount' => 2,
             'expectedPatchDirectory' => 'patch-dir',
             'expectedIgnoreBranch' => true,
+            'expectedDisableTidyPatches' => true,
+            'expectedForceTidyPatches' => true,
         ];
         yield 'empty configuration' => [
             'configuration' => null,
@@ -133,6 +143,8 @@ final class ConfigTest extends TestCase
             'expectedPreferredInstallChangedCount' => 0,
             'expectedPatchDirectory' => 'patches',
             'expectedIgnoreBranch' => false,
+            'expectedDisableTidyPatches' => false,
+            'expectedForceTidyPatches' => false,
         ];
         yield 'empty extra' => [
             'configuration' => ['extra' => []],
@@ -142,6 +154,8 @@ final class ConfigTest extends TestCase
             'expectedPreferredInstallChangedCount' => 0,
             'expectedPatchDirectory' => 'patches',
             'expectedIgnoreBranch' => false,
+            'expectedDisableTidyPatches' => false,
+            'expectedForceTidyPatches' => false,
         ];
     }
 
@@ -402,6 +416,8 @@ final class ConfigTest extends TestCase
                         ],
                         'patch-directory' => 'patch-dir',
                         'ignore-branch' => true,
+                        'disable-tidy-patches' => true,
+                        'force-tidy-patches' => true,
                     ],
                 ],
             ],
@@ -447,6 +463,8 @@ final class ConfigTest extends TestCase
                         ],
                         'patch-directory' => 'patch-dir',
                         'ignore-branch' => true,
+                        'disable-tidy-patches' => true,
+                        'force-tidy-patches' => true,
                     ],
                 ],
             ],
@@ -497,5 +515,13 @@ final class ConfigTest extends TestCase
         self::assertTrue($config->getIgnoreBranch());
 
         self::assertSame($config->getPatches(), $config->getPatches());
+
+        self::assertFalse($config->getDisableTidyPatches());
+        self::assertSame($config, $config->setDisableTidyPatches(true));
+        self::assertTrue($config->getDisableTidyPatches());
+
+        self::assertFalse($config->getForceTidyPatches());
+        self::assertSame($config, $config->setForceTidyPatches(true));
+        self::assertTrue($config->getForceTidyPatches());
     }
 }

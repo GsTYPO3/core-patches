@@ -361,7 +361,7 @@ final class ComposerUtils
                 ' Should the patch for this change be removed?</info> [<comment>Y,n</comment>] ',
                 $changeId
             ),
-            true
+            $this->config->load()->getForceTidyPatches()
         );
     }
 

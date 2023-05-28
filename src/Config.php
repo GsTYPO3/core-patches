@@ -75,6 +75,16 @@ final class Config implements PersistenceInterface
      */
     private const PLUGIN_IGNORE_BRANCH = 'ignore-branch';
 
+    /**
+     * @var string
+     */
+    private const PLUGIN_DISABLE_TIDY_PATCHES = 'disable-tidy-patches';
+
+    /**
+     * @var string
+     */
+    private const PLUGIN_FORCE_TIDY_PATCHES = 'force-tidy-patches';
+
     private JsonFile $jsonFile;
 
     private ConfigSourceInterface $configSource;
@@ -90,6 +100,10 @@ final class Config implements PersistenceInterface
     private Patches $patches;
 
     private bool $ignoreBranch = \false;
+
+    private bool $disableTidyPatches = \false;
+
+    private bool $forceTidyPatches = \false;
 
     public function __construct(
         ?JsonFile $jsonFile = null,
@@ -152,6 +166,30 @@ final class Config implements PersistenceInterface
         return $this->patches;
     }
 
+    public function getDisableTidyPatches(): bool
+    {
+        return $this->disableTidyPatches;
+    }
+
+    public function setDisableTidyPatches(bool $disableTidyPatches): self
+    {
+        $this->disableTidyPatches = $disableTidyPatches;
+
+        return $this;
+    }
+
+    public function getForceTidyPatches(): bool
+    {
+        return $this->forceTidyPatches;
+    }
+
+    public function setForceTidyPatches(bool $forceTidyPatches): self
+    {
+        $this->forceTidyPatches = $forceTidyPatches;
+
+        return $this;
+    }
+
     private function isEmpty(): bool
     {
         if (!$this->changes->isEmpty()) {
@@ -166,7 +204,15 @@ final class Config implements PersistenceInterface
             return false;
         }
 
-        return !$this->ignoreBranch;
+        if ($this->ignoreBranch) {
+            return false;
+        }
+
+        if ($this->disableTidyPatches) {
+            return false;
+        }
+
+        return !$this->forceTidyPatches;
     }
 
     public function load(): self
@@ -259,6 +305,14 @@ final class Config implements PersistenceInterface
             $config[self::PLUGIN_IGNORE_BRANCH] = $this->ignoreBranch;
         }
 
+        if ($this->disableTidyPatches) {
+            $config[self::PLUGIN_DISABLE_TIDY_PATCHES] = $this->disableTidyPatches;
+        }
+
+        if ($this->forceTidyPatches) {
+            $config[self::PLUGIN_FORCE_TIDY_PATCHES] = $this->forceTidyPatches;
+        }
+
         return $config;
     }
 
@@ -317,6 +371,18 @@ final class Config implements PersistenceInterface
         }
 
         $this->ignoreBranch = $ignoreBranch;
+
+        if (!is_bool($disableTidyPatches = $packageConfig[self::PLUGIN_DISABLE_TIDY_PATCHES] ?? null)) {
+            $disableTidyPatches = false;
+        }
+
+        $this->disableTidyPatches = $disableTidyPatches;
+
+        if (!is_bool($forceTidyPatches = $packageConfig[self::PLUGIN_FORCE_TIDY_PATCHES] ?? null)) {
+            $forceTidyPatches = false;
+        }
+
+        $this->forceTidyPatches = $forceTidyPatches;
 
         return $this;
     }

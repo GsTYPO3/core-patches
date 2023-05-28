@@ -136,13 +136,35 @@ composer config extra.gilbertsoft/typo3-core-patches.ignore-branch true
 When running `composer update` or `composer install`, the plugin detects changes
 that already exist in the version being installed and suggests removing them. If
 you run Composer with the `--no-interaction` option, the patches are always
-removed.
+preserved. This can be changed by the config `force-tidy-patches` see bellow.
 
 Errors may occur if you use the source-dist of packages, which can be solved by
 adding the `config.discard-changes` configuration option to your `composer.json`,
 see <https://getcomposer.org/doc/06-config.md#discard-changes>. Run e.g.
 `composer config discard-changes true` to add the configuration to your
 `composer.json`.
+
+If a CI environment is detected, the detection of merged changes is skipped by
+default. To change this behavior and enable the detection again, run:
+
+```bash
+composer config extra.gilbertsoft/typo3-core-patches.force-tidy-patches true
+```
+
+To disable the detection of merged changes completely, run:
+
+```bash
+composer config extra.gilbertsoft/typo3-core-patches.disable-tidy-patches true
+```
+
+## CI detection
+
+The plugin tries to detect CI environments and changes its default behavior
+while running in a CI pipeline. It's possible to override the detection by
+setting an environment variable:
+
+- Set `GS_CI=1` to force CI mode
+- Set `GS_CI=0` to disable CI mode
 
 ## Feedback / Bug reports / Contribution
 
