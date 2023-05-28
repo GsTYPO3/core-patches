@@ -70,6 +70,11 @@ final class Config implements PersistenceInterface
      */
     private const DEFAULT_PATCH_DIRECTORY = 'patches';
 
+    /**
+     * @var string
+     */
+    private const PLUGIN_IGNORE_BRANCH = 'ignore-branch';
+
     private JsonFile $jsonFile;
 
     private ConfigSourceInterface $configSource;
@@ -83,6 +88,8 @@ final class Config implements PersistenceInterface
     private PreferredInstall $preferredInstall;
 
     private Patches $patches;
+
+    private bool $ignoreBranch = \false;
 
     public function __construct(
         ?JsonFile $jsonFile = null,
@@ -123,6 +130,18 @@ final class Config implements PersistenceInterface
         return $this;
     }
 
+    public function getIgnoreBranch(): bool
+    {
+        return $this->ignoreBranch;
+    }
+
+    public function setIgnoreBranch(bool $ignoreBranch): self
+    {
+        $this->ignoreBranch = $ignoreBranch;
+
+        return $this;
+    }
+
     public function getPreferredInstall(): PreferredInstall
     {
         return $this->preferredInstall;
@@ -143,7 +162,11 @@ final class Config implements PersistenceInterface
             return false;
         }
 
-        return $this->patchDirectory === '';
+        if ($this->patchDirectory !== '') {
+            return false;
+        }
+
+        return !$this->ignoreBranch;
     }
 
     public function load(): self
@@ -232,6 +255,10 @@ final class Config implements PersistenceInterface
             $config[self::PLUGIN_PATCH_DIRECTORY] = $this->patchDirectory;
         }
 
+        if ($this->ignoreBranch) {
+            $config[self::PLUGIN_IGNORE_BRANCH] = $this->ignoreBranch;
+        }
+
         return $config;
     }
 
@@ -284,6 +311,12 @@ final class Config implements PersistenceInterface
         }
 
         $this->patchDirectory = $patchDirectory;
+
+        if (!is_bool($ignoreBranch = $packageConfig[self::PLUGIN_IGNORE_BRANCH] ?? null)) {
+            $ignoreBranch = false;
+        }
+
+        $this->ignoreBranch = $ignoreBranch;
 
         return $this;
     }

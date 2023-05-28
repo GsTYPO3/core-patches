@@ -26,12 +26,14 @@ final class ChangeInfoTest extends TestCase
     {
         $changeInfo = ChangeInfo::fromJson('{
             "id": "idValue",
+            "branch": "branchValue",
             "change_id": "changeIdValue",
             "subject": "subjectValue",
             "_number": 12345
         }');
 
         self::assertSame('idValue', $changeInfo->id);
+        self::assertSame('branchValue', $changeInfo->branch);
         self::assertSame('changeIdValue', $changeInfo->changeId);
         self::assertSame('subjectValue', $changeInfo->subject);
         self::assertSame(12345, $changeInfo->number);

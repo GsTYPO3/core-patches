@@ -42,5 +42,10 @@
 			"typo3/cms-composer-installers": true
 		},
 		"discard-changes": true
+	},
+	"extra": {
+		"gilbertsoft/typo3-core-patches": {
+			"ignore-branch": true
+		}
 	}
 }

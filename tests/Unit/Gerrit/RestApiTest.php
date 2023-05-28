@@ -84,6 +84,7 @@ final class RestApiTest extends TestCase
     public function testGetChange(
         string $rawChangeId,
         string $id,
+        string $branch,
         string $changeId,
         string $subject,
         string $subjectNormalized,
@@ -92,10 +93,12 @@ final class RestApiTest extends TestCase
         $changeInfo = $this->gerritRestApi->getChange($rawChangeId);
 
         self::assertSame($id, $changeInfo->id);
+        self::assertSame($branch, $changeInfo->branch);
         self::assertSame($changeId, $changeInfo->changeId);
         self::assertSame($subject, $changeInfo->subject);
         self::assertSame($number, $changeInfo->number);
 
+        self::assertSame($branch, $this->gerritRestApi->getBranch($rawChangeId));
         self::assertSame($subjectNormalized, $this->gerritRestApi->getSubject($rawChangeId));
         self::assertSame($number, $this->gerritRestApi->getNumericId($rawChangeId));
     }
@@ -104,6 +107,7 @@ final class RestApiTest extends TestCase
      * @return Iterator<string, array{
      *   rawChangeId: string,
      *   id: string,
+     *   branch: string,
      *   changeId: string,
      *   subject: string,
      *   subjectNormalized: string,
@@ -115,6 +119,7 @@ final class RestApiTest extends TestCase
         yield 'numeric change id' => [
             'rawChangeId' => '73021',
             'id' => 'Packages%2FTYPO3.CMS~main~I84baa3df4b3a96cacbb3e686e4c85562d67422df',
+            'branch' => 'main',
             'changeId' => 'I84baa3df4b3a96cacbb3e686e4c85562d67422df',
             'subject' => '[TASK] Test change for gilbertsoft/typo3-core-patches',
             'subjectNormalized' => 'Test change for gilbertsoft/typo3-core-patches',
@@ -123,6 +128,7 @@ final class RestApiTest extends TestCase
         yield 'change url' => [
             'rawChangeId' => 'https://review.typo3.org/c/Packages/TYPO3.CMS/+/73021',
             'id' => 'Packages%2FTYPO3.CMS~main~I84baa3df4b3a96cacbb3e686e4c85562d67422df',
+            'branch' => 'main',
             'changeId' => 'I84baa3df4b3a96cacbb3e686e4c85562d67422df',
             'subject' => '[TASK] Test change for gilbertsoft/typo3-core-patches',
             'subjectNormalized' => 'Test change for gilbertsoft/typo3-core-patches',
