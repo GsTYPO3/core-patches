@@ -33,6 +33,16 @@ final class PatchUtils
         $this->io = $io;
     }
 
+    public function getPatchFileName(string $destination, string $packageName, int $numericId): string
+    {
+        return sprintf(
+            '%s/%s-review-%s.patch',
+            $destination,
+            str_replace('/', '-', $packageName),
+            $numericId
+        );
+    }
+
     public function patchIsPartOfChange(string $patchFileName, int $numericId): bool
     {
         return strpos($patchFileName, '-review-' . $numericId . '.patch') !== false;
@@ -221,12 +231,7 @@ final class PatchUtils
 
         foreach ($patches as $packageName => $chunks) {
             $content = implode('', $chunks);
-            $patchFileName = sprintf(
-                '%s/%s-review-%s.patch',
-                $destination,
-                str_replace('/', '-', $packageName),
-                $numericId
-            );
+            $patchFileName = $this->getPatchFileName($destination, $packageName, $numericId);
             $this->io->write(sprintf('  - Creating patch <info>%s</info>', $patchFileName));
             file_put_contents($patchFileName, $content);
             $composerChanges[$packageName] = [$subject => $patchFileName];
