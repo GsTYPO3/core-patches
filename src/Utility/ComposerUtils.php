@@ -361,7 +361,7 @@ final class ComposerUtils
                 ' Should the patch for this change be removed?</info> [<comment>Y,n</comment>] ',
                 $changeId
             ),
-            false
+            $this->config->load()->getForceTidyPatches()
         );
     }
 
@@ -373,11 +373,6 @@ final class ComposerUtils
         if ($resultCode !== $expectedCode) {
             throw new CommandExecutionException($errorMessage, $resultCode);
         }
-    }
-
-    public function isObsoletePatchesCheckDisabled(): bool
-    {
-        return $this->config->load()->getSkipObsoletePatchesCheck();
     }
 
     /**

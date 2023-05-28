@@ -44,7 +44,8 @@ final class ConfigTest extends TestCase
         int $expectedAppliedChangesCount,
         int $expectedPreferredInstallChangedCount,
         string $expectedPatchDirectory,
-        bool $expectedSkipObsoletePatchesCheck,
+        bool $expectedDisableTidyPatches,
+        bool $expectedForceTidyPatches,
         bool $expectedIgnoreBranch
     ): void {
         $jsonFileProphecy = $this->prophesize(JsonFile::class);
@@ -61,7 +62,8 @@ final class ConfigTest extends TestCase
         self::assertCount($expectedPreferredInstallChangedCount, $config->getPreferredInstallChanged());
         self::assertSame($expectedPatchDirectory, $config->getPatchDirectory());
         self::assertSame($expectedIgnoreBranch, $config->getIgnoreBranch());
-        self::assertSame($expectedSkipObsoletePatchesCheck, $config->getSkipObsoletePatchesCheck());
+        self::assertSame($expectedDisableTidyPatches, $config->getDisableTidyPatches());
+        self::assertSame($expectedForceTidyPatches, $config->getForceTidyPatches());
     }
 
     /**
@@ -72,7 +74,8 @@ final class ConfigTest extends TestCase
      *   expectedAppliedChangesCount: int,
      *   expectedPreferredInstallChangedCount: int,
      *   expectedPatchDirectory: string,
-     *   expectedSkipObsoletePatchesCheck: bool,
+     *   expectedDisableTidyPatches: bool,
+     *   expectedForceTidyPatches: bool,
      *   expectedIgnoreBranch: bool
      * }>
      */
@@ -118,7 +121,8 @@ final class ConfigTest extends TestCase
                         'preferred-install-changed' => ['package1', 'package2'],
                         'patch-directory' => 'patch-dir',
                         'ignore-branch' => true,
-                        'skip-obsolete-patches-check' => true,
+                        'disable-tidy-patches' => true,
+                        'force-tidy-patches' => true,
                     ],
                 ],
             ],
@@ -127,7 +131,8 @@ final class ConfigTest extends TestCase
             'expectedAppliedChangesCount' => 2,
             'expectedPreferredInstallChangedCount' => 2,
             'expectedPatchDirectory' => 'patch-dir',
-            'expectedSkipObsoletePatchesCheck' => true,
+            'expectedDisableTidyPatches' => true,
+            'expectedForceTidyPatches' => true,
             'expectedIgnoreBranch' => true,
         ];
         yield 'empty configuration' => [
@@ -137,7 +142,8 @@ final class ConfigTest extends TestCase
             'expectedAppliedChangesCount' => 0,
             'expectedPreferredInstallChangedCount' => 0,
             'expectedPatchDirectory' => 'patches',
-            'expectedSkipObsoletePatchesCheck' => false,
+            'expectedDisableTidyPatches' => false,
+            'expectedForceTidyPatches' => false,
             'expectedIgnoreBranch' => false,
         ];
         yield 'empty extra' => [
@@ -147,7 +153,8 @@ final class ConfigTest extends TestCase
             'expectedAppliedChangesCount' => 0,
             'expectedPreferredInstallChangedCount' => 0,
             'expectedPatchDirectory' => 'patches',
-            'expectedSkipObsoletePatchesCheck' => false,
+            'expectedDisableTidyPatches' => false,
+            'expectedForceTidyPatches' => false,
             'expectedIgnoreBranch' => false,
         ];
     }
@@ -409,7 +416,8 @@ final class ConfigTest extends TestCase
                         ],
                         'patch-directory' => 'patch-dir',
                         'ignore-branch' => true,
-                        'skip-obsolete-patches-check' => true,
+                        'disable-tidy-patches' => true,
+                        'force-tidy-patches' => true,
                     ],
                 ],
             ],
@@ -455,7 +463,8 @@ final class ConfigTest extends TestCase
                         ],
                         'patch-directory' => 'patch-dir',
                         'ignore-branch' => true,
-                        'skip-obsolete-patches-check' => true,
+                        'disable-tidy-patches' => true,
+                        'force-tidy-patches' => true,
                     ],
                 ],
             ],
@@ -506,5 +515,13 @@ final class ConfigTest extends TestCase
         self::assertTrue($config->getIgnoreBranch());
 
         self::assertSame($config->getPatches(), $config->getPatches());
+
+        self::assertFalse($config->getDisableTidyPatches());
+        self::assertSame($config, $config->setDisableTidyPatches(true));
+        self::assertTrue($config->getDisableTidyPatches());
+
+        self::assertFalse($config->getForceTidyPatches());
+        self::assertSame($config, $config->setForceTidyPatches(true));
+        self::assertTrue($config->getForceTidyPatches());
     }
 }

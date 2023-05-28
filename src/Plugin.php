@@ -18,9 +18,11 @@ use Composer\DependencyResolver\Operation\InstallOperation;
 use Composer\DependencyResolver\Operation\UpdateOperation;
 use Composer\DependencyResolver\Transaction;
 use Composer\EventDispatcher\EventSubscriberInterface;
+use Composer\Factory;
 use Composer\Installer\InstallerEvent;
 use Composer\Installer\InstallerEvents;
 use Composer\IO\IOInterface;
+use Composer\Json\JsonFile;
 use Composer\Plugin\Capability\CommandProvider as ComposerCommandProvider;
 use Composer\Plugin\Capable;
 use Composer\Plugin\PluginInterface;
@@ -33,6 +35,8 @@ final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
 {
     private ComposerUtils $composerUtils;
 
+    private Config $config;
+
     /**
      * @var array<int, string>
      */
@@ -44,6 +48,10 @@ final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
     public function activate(Composer $composer, IOInterface $io): void
     {
         $this->composerUtils = new ComposerUtils($composer, $io);
+        $this->config = new Config(
+            new JsonFile(Factory::getComposerFile(), Factory::createHttpDownloader($io, $composer->getConfig()), $io),
+            $composer->getConfig()->getConfigSource()
+        );
 
         $composer->getConfig()->getConfigSource()->addConfigSetting('allow-plugins.cweagans/composer-patches', true);
     }
@@ -101,11 +109,13 @@ final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
             return;
         }
 
-        if (Utils::isCI()) {
+        $this->config->load();
+
+        if (Utils::isCI() && !$this->config->getForceTidyPatches()) {
             return;
         }
 
-        if ($this->composerUtils->isObsoletePatchesCheckDisabled()) {
+        if ($this->config->getDisableTidyPatches()) {
             return;
         }
 
