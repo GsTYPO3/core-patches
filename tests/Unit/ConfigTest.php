@@ -44,9 +44,9 @@ final class ConfigTest extends TestCase
         int $expectedAppliedChangesCount,
         int $expectedPreferredInstallChangedCount,
         string $expectedPatchDirectory,
+        bool $expectedIgnoreBranch,
         bool $expectedDisableTidyPatches,
-        bool $expectedForceTidyPatches,
-        bool $expectedIgnoreBranch
+        bool $expectedForceTidyPatches
     ): void {
         $jsonFileProphecy = $this->prophesize(JsonFile::class);
         $jsonFileProphecy->read()->willReturn($configuration);
@@ -74,9 +74,9 @@ final class ConfigTest extends TestCase
      *   expectedAppliedChangesCount: int,
      *   expectedPreferredInstallChangedCount: int,
      *   expectedPatchDirectory: string,
+     *   expectedIgnoreBranch: bool,
      *   expectedDisableTidyPatches: bool,
-     *   expectedForceTidyPatches: bool,
-     *   expectedIgnoreBranch: bool
+     *   expectedForceTidyPatches: bool
      * }>
      */
     public function configurationLoadProvider(): Iterator
@@ -131,9 +131,9 @@ final class ConfigTest extends TestCase
             'expectedAppliedChangesCount' => 2,
             'expectedPreferredInstallChangedCount' => 2,
             'expectedPatchDirectory' => 'patch-dir',
+            'expectedIgnoreBranch' => true,
             'expectedDisableTidyPatches' => true,
             'expectedForceTidyPatches' => true,
-            'expectedIgnoreBranch' => true,
         ];
         yield 'empty configuration' => [
             'configuration' => null,
@@ -142,9 +142,9 @@ final class ConfigTest extends TestCase
             'expectedAppliedChangesCount' => 0,
             'expectedPreferredInstallChangedCount' => 0,
             'expectedPatchDirectory' => 'patches',
+            'expectedIgnoreBranch' => false,
             'expectedDisableTidyPatches' => false,
             'expectedForceTidyPatches' => false,
-            'expectedIgnoreBranch' => false,
         ];
         yield 'empty extra' => [
             'configuration' => ['extra' => []],
@@ -153,9 +153,9 @@ final class ConfigTest extends TestCase
             'expectedAppliedChangesCount' => 0,
             'expectedPreferredInstallChangedCount' => 0,
             'expectedPatchDirectory' => 'patches',
+            'expectedIgnoreBranch' => false,
             'expectedDisableTidyPatches' => false,
             'expectedForceTidyPatches' => false,
-            'expectedIgnoreBranch' => false,
         ];
     }
 
