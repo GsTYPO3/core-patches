@@ -1,7 +1,8 @@
 # TYPO3 Core Patches
 
-[![Packagist Version](https://img.shields.io/packagist/v/gilbertsoft/typo3-core-patches)](https://packagist.org/packages/gilbertsoft/typo3-core-patches)
+[![Packagist Version](https://img.shields.io/packagist/v/gilbertsoft/typo3-core-patches?include_prereleases)](https://packagist.org/packages/gilbertsoft/typo3-core-patches)
 [![Packagist PHP Version Support](https://img.shields.io/packagist/php-v/gilbertsoft/typo3-core-patches)](https://packagist.org/packages/gilbertsoft/typo3-core-patches)
+[![Packagist Dependency Version](https://img.shields.io/packagist/dependency-v/gilbertsoft/typo3-core-patches/cweagans/composer-patches)](https://packagist.org/packages/gilbertsoft/typo3-core-patches)
 [![Packagist Downloads](https://img.shields.io/packagist/dt/gilbertsoft/typo3-core-patches)](https://packagist.org/packages/gilbertsoft/typo3-core-patches)
 [![GitHub issues](https://img.shields.io/github/issues/GsTYPO3/core-patches)](https://github.com/GsTYPO3/core-patches/issues)
 [![GitHub forks](https://img.shields.io/github/forks/GsTYPO3/core-patches)](https://github.com/GsTYPO3/core-patches/network)
@@ -19,12 +20,16 @@ dependency for production usage.
 **Table of contents**:
 
 - [Installation](#installation)
+  - [Prerelease](#prerelease)
 - [Usage](#usage)
   - [Adding a change](#adding-a-change)
   - [Updating a change](#updating-a-change)
   - [Removing a change](#removing-a-change)
   - [Supported change ID formats](#supported-change-id-formats)
-- [Detection of merged changes on update or install](#detection-of-merged-changes-on-update-or-install)
+- [Configuration](#configuration)
+  - [Branch verification](#branch-verification)
+  - [Outdated patch detection](#outdated-patch-detection)
+  - [CI detection](#ci-detection)
 - [Feedback / Bug reports / Contribution](#feedback--bug-reports--contribution)
 - [License](#license)
 
@@ -134,11 +139,13 @@ next example:
 composer typo3:patch:apply https://review.typo3.org/c/Packages/TYPO3.CMS/+/12345
 ```
 
-## Verification of the branch
+## Configuration
+
+### Branch verification
 
 The plugin compares the current installed core version with the target branch
-of the patch to install and asks for confirmation to anyway try to apply the
-patch to the different version.
+of the patch to install and if different, asks for confirmation to anyway try
+to apply the patch to the different version.
 
 To disabled the branch check for this project, run:
 
@@ -146,12 +153,13 @@ To disabled the branch check for this project, run:
 composer config extra.gilbertsoft/typo3-core-patches.ignore-branch true
 ```
 
-## Detection of merged changes on update or install
+### Outdated patch detection
 
 When running `composer update` or `composer install`, the plugin detects changes
-that already exist in the version being installed and suggests removing them. If
-you run Composer with the `--no-interaction` option, the patches are always
-preserved. This can be changed by the config `force-tidy-patches` see bellow.
+that already exist in the version being installed and suggests removing the
+related patches. If you run Composer with the `--no-interaction` option, the
+patches are always preserved. This can be changed by the config
+`force-tidy-patches` see bellow.
 
 Errors may occur if you use the source-dist of packages, which can be solved by
 adding the `config.discard-changes` configuration option to your `composer.json`,
@@ -172,7 +180,7 @@ To disable the detection of merged changes completely, run:
 composer config extra.gilbertsoft/typo3-core-patches.disable-tidy-patches true
 ```
 
-## CI detection
+### CI detection
 
 The plugin tries to detect CI environments and changes its default behavior
 while running in a CI pipeline. It's possible to override the detection by
@@ -183,8 +191,8 @@ setting an environment variable:
 
 ## Feedback / Bug reports / Contribution
 
-Bug reports, feature requests and pull requests are welcome in the [GitHub
-repository](https://github.com/GsTYPO3/core-patches).
+Bug reports, feature requests, pull requests, and any other kind of feedback are
+welcome in the [GitHub repository](https://github.com/GsTYPO3/core-patches).
 
 For support questions or other discussions please use the [GitHub Discussions](https://github.com/GsTYPO3/core-patches/discussions)
 or join the dedicated [TYPO3 Slack channel](https://typo3.slack.com/archives/C03GY4LEVPU).
