@@ -48,17 +48,29 @@ final class ComposerUtils
 
     private PatchUtils $patchUtils;
 
-    public function __construct(Composer $composer, IOInterface $io)
-    {
+    public function __construct(
+        Composer $composer,
+        IOInterface $io,
+        ?Config $config = null,
+        ?Application $application = null,
+        ?RestApi $restApi = null,
+        ?PatchUtils $patchUtils = null
+    ) {
         $this->composer = $composer;
         $this->io = $io;
 
-        $this->config = new Config(new JsonFile(Factory::getComposerFile(), null, $this->io));
-        $this->application = new Application();
+        $httpDownloader = Factory::createHttpDownloader($this->io, $this->composer->getConfig());
+
+        $this->config = $config ?? new Config(
+            new JsonFile(Factory::getComposerFile(), $httpDownloader, $this->io),
+            $this->composer->getConfig()->getConfigSource()
+        );
+
+        $this->application = $application ?? new Application();
         $this->application->setAutoExit(false);
 
-        $this->gerritRestApi = new RestApi(Factory::createHttpDownloader($this->io, $this->composer->getConfig()));
-        $this->patchUtils = new PatchUtils($this->composer, $this->io);
+        $this->gerritRestApi = $restApi ?? new RestApi($httpDownloader);
+        $this->patchUtils = $patchUtils ?? new PatchUtils($this->composer, $this->io);
     }
 
     /**

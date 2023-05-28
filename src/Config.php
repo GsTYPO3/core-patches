@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches;
 
+use Composer\Config\ConfigSourceInterface;
 use Composer\Config\JsonConfigSource;
 use Composer\Factory;
 use Composer\Json\JsonFile;
@@ -71,7 +72,7 @@ final class Config implements PersistenceInterface
 
     private JsonFile $jsonFile;
 
-    private JsonConfigSource $jsonConfigSource;
+    private ConfigSourceInterface $configSource;
 
     private Changes $changes;
 
@@ -83,10 +84,12 @@ final class Config implements PersistenceInterface
 
     private Patches $patches;
 
-    public function __construct(?JsonFile $jsonFile = null, ?JsonConfigSource $jsonConfigSource = null)
-    {
+    public function __construct(
+        ?JsonFile $jsonFile = null,
+        ?ConfigSourceInterface $configSource = null
+    ) {
         $this->jsonFile = $jsonFile ?? new JsonFile(Factory::getComposerFile());
-        $this->jsonConfigSource = $jsonConfigSource ?? new JsonConfigSource($this->jsonFile);
+        $this->configSource = $configSource ?? new JsonConfigSource($this->jsonFile);
 
         $this->changes = new Changes();
         $this->preferredInstallChanged = new PreferredInstallChanged();
@@ -165,9 +168,9 @@ final class Config implements PersistenceInterface
             );
 
             if ($installMethod === '') {
-                $this->jsonConfigSource->removeConfigSetting($name);
+                $this->configSource->removeConfigSetting($name);
             } else {
-                $this->jsonConfigSource->addConfigSetting($name, $installMethod);
+                $this->configSource->addConfigSetting($name, $installMethod);
             }
         }
 
@@ -179,9 +182,9 @@ final class Config implements PersistenceInterface
         );
 
         if ($this->patches->isEmpty()) {
-            $this->jsonConfigSource->removeProperty($name);
+            $this->configSource->removeProperty($name);
         } else {
-            $this->jsonConfigSource->addProperty($name, $this->patches);
+            $this->configSource->addProperty($name, $this->patches);
         }
 
         // Save plugin configuration
@@ -192,9 +195,9 @@ final class Config implements PersistenceInterface
         );
 
         if ($this->isEmpty()) {
-            $this->jsonConfigSource->removeProperty($name);
+            $this->configSource->removeProperty($name);
         } else {
-            $this->jsonConfigSource->addProperty($name, $this);
+            $this->configSource->addProperty($name, $this);
         }
 
         // Rewrite configuration to enforce correct formatting
