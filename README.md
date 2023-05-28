@@ -39,16 +39,31 @@ composer require gilbertsoft/typo3-core-patches
 ```
 
 If the package is installed as dev requirement, the patches won't get applied
-using the install option `--no-dev`.
+using the install option `--no-dev` as long as you don't require
+`cweagans/composer-patches` as normal dependency.
 
 For Composer 2.2 and later, plug-ins must be explicitly allowed using the
 following command:
 
 ```bash
-composer config allow-plugins.gilbertsoft/typo3-core-patches true
+composer config --no-plugins allow-plugins.gilbertsoft/typo3-core-patches true
+composer config --no-plugins allow-plugins.gilbertsoft/cweagans/composer-patches true
 ```
 
-`cweagans/composer-patches` is automatically added by this plugin.
+### Prerelease
+
+To install a prerelease, run the following command using one of the stability
+flags `dev`, `alpha`, `beta` or `RC`:
+
+```bash
+composer require gilbertsoft/typo3-core-patches:@<stability>
+```
+
+E.g. this would allow Composer to install beta, RC and stable releases:
+
+```bash
+composer require gilbertsoft/typo3-core-patches:@beta
+```
 
 ## Usage
 
