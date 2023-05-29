@@ -59,7 +59,7 @@
 			"target-directory": "tools"
 		},
 		"branch-alias": {
-			"dev-main": "0.2.x-dev"
+			"dev-main": "0.4.x-dev"
 		},
 		"class": "GsTYPO3\\CorePatches\\Plugin"
 	},
