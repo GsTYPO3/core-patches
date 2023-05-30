@@ -11,17 +11,17 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace GsTYPO3\CorePatches\Tests\Unit\Command;
+namespace GsTYPO3\CorePatches\Tests\Functional\Command;
 
 use Composer\Console\Application;
-use GsTYPO3\CorePatches\Tests\Unit\TestCase;
-use GsTYPO3\CorePatches\Tests\Unit\Tester\CommandTester;
+use GsTYPO3\CorePatches\Tests\Functional\TestCaseWithFixtures;
+use GsTYPO3\CorePatches\Tests\Functional\Tester\CommandTester;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
-abstract class CommandTestCase extends TestCase
+abstract class CommandTestCase extends TestCaseWithFixtures
 {
     private Application $application;
 

@@ -18,7 +18,6 @@ use Composer\Json\JsonFile;
 use GsTYPO3\CorePatches\Config;
 use Iterator;
 use Prophecy\Argument;
-use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @covers \GsTYPO3\CorePatches\Config
@@ -31,8 +30,6 @@ use Prophecy\PhpUnit\ProphecyTrait;
  */
 final class ConfigTest extends TestCase
 {
-    use ProphecyTrait;
-
     /**
      * @dataProvider configurationLoadProvider
      * @param array<string, mixed>|null $configuration
@@ -170,7 +167,7 @@ final class ConfigTest extends TestCase
     ): void {
         $jsonFileProphecy = $this->prophesize(JsonFile::class);
         $jsonFileProphecy->exists()->willReturn(true);
-        $jsonFileProphecy->getPath()->willReturn(self::getTestPath() . '/composer.json');
+        $jsonFileProphecy->getPath()->willReturn('composer.json');
         $jsonFileProphecy->validateSchema(Argument::any(), Argument::any())->willReturn(true);
         $jsonFileProphecy->read()->will(static fn (): ?array => $configuration);
         $jsonFileProphecy->write(Argument::any())->willReturn();

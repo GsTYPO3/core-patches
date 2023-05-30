@@ -1,0 +1,44 @@
+From 9937773ba3b1343c6484c57236ffef8e0699423a Mon Sep 17 00:00:00 2001
+From: Simon Gilli <typo3@gilbertsoft.org>
+Date: Fri, 14 Jan 2022 16:49:24 +0100
+Subject: [PATCH] [TASK] Test change for gilbertsoft/typo3-core-patches
+
+This change is used in the tests of the package
+gilbertsoft/typo3-core-patches.
+
+Resolves: #96544
+Releases: main
+Change-Id: I84baa3df4b3a96cacbb3e686e4c85562d67422df
+---
+
+diff --git a/Classes/BackendTest.php b/Classes/BackendTest.php
+new file mode 100644
+index 0000000..11b1dc4
+--- /dev/null
++++ b/Classes/BackendTest.php
+@@ -0,0 +1,25 @@
++<?php
++
++declare(strict_types=1);
++
++/*
++ * This file is part of the TYPO3 CMS project.
++ *
++ * It is free software; you can redistribute it and/or modify it under
++ * the terms of the GNU General Public License, either version 2
++ * of the License, or any later version.
++ *
++ * For the full copyright and license information, please read the
++ * LICENSE.txt file that was distributed with this source code.
++ *
++ * The TYPO3 project - inspiring people to share!
++ */
++
++namespace TYPO3\CMS\Backend;
++
++/**
++ * Class which should get patched to the backend package without any problems.
++ */
++final class BackendTest
++{
++}

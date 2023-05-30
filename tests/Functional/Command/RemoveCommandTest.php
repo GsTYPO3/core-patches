@@ -11,35 +11,37 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace GsTYPO3\CorePatches\Tests\Unit\Command;
+namespace GsTYPO3\CorePatches\Tests\Functional\Command;
 
-use GsTYPO3\CorePatches\Command\Typo3\Patch\UpdateCommand;
+use GsTYPO3\CorePatches\Command\Typo3\Patch\RemoveCommand;
 use RuntimeException;
 use Throwable;
 
 /**
  * @long
- * @covers \GsTYPO3\CorePatches\Command\Typo3\Patch\UpdateCommand
- * @uses \GsTYPO3\CorePatches\CommandProvider
- * @uses \GsTYPO3\CorePatches\Command\Typo3\Patch\ApplyCommand
- * @uses \GsTYPO3\CorePatches\Command\Typo3\Patch\RemoveCommand
- * @uses \GsTYPO3\CorePatches\Config
- * @uses \GsTYPO3\CorePatches\Config\Changes
- * @uses \GsTYPO3\CorePatches\Config\Packages
- * @uses \GsTYPO3\CorePatches\Config\Patches
- * @uses \GsTYPO3\CorePatches\Config\PreferredInstall
- * @uses \GsTYPO3\CorePatches\Gerrit\RestApi
- * @uses \GsTYPO3\CorePatches\Utility\ComposerUtils
- * @uses \GsTYPO3\CorePatches\Utility\PatchUtils
- * @uses \GsTYPO3\CorePatches\Utility\Utils
+ * @covers \GsTYPO3\CorePatches\Command\Typo3\Patch\RemoveCommand
+ * @ uses \GsTYPO3\CorePatches\CommandProvider
+ * @ uses \GsTYPO3\CorePatches\Command\Typo3\Patch\ApplyCommand
+ * @ uses \GsTYPO3\CorePatches\Command\Typo3\Patch\UpdateCommand
+ * @ uses \GsTYPO3\CorePatches\Config
+ * @ uses \GsTYPO3\CorePatches\Config\Changes
+ * @ uses \GsTYPO3\CorePatches\Config\Packages
+ * @ uses \GsTYPO3\CorePatches\Config\Patches
+ * @ uses \GsTYPO3\CorePatches\Config\PreferredInstall
+ * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
+ * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\ChangeInfo
+ * @ uses \GsTYPO3\CorePatches\Gerrit\RestApi
+ * @ uses \GsTYPO3\CorePatches\Utility\ComposerUtils
+ * @ uses \GsTYPO3\CorePatches\Utility\PatchUtils
+ * @ uses \GsTYPO3\CorePatches\Utility\Utils
  */
-final class UpdateCommandTest extends CommandTestCase
+final class RemoveCommandTest extends CommandTestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->getApplication()->add(new UpdateCommand());
+        $this->getApplication()->add(new RemoveCommand());
     }
 
     /**
@@ -49,17 +51,12 @@ final class UpdateCommandTest extends CommandTestCase
      */
     private function getInput(
         ?array $changeIds = null,
-        ?string $patchDir = null,
         array $input = []
     ): array {
         $result = [];
 
         if ($changeIds !== null) {
             $result['change-id'] = $changeIds;
-        }
-
-        if ($patchDir !== null) {
-            $result['--patch-dir'] = $patchDir;
         }
 
         return array_merge(
@@ -71,15 +68,15 @@ final class UpdateCommandTest extends CommandTestCase
 
     public function testExecute(): void
     {
-        $commandTester = $this->getCommandTester('typo3:patch:update');
+        $commandTester = $this->getCommandTester('typo3:patch:remove');
 
         try {
             // test default path argument
-            $commandTester->execute($this->getInput());
+            $commandTester->execute($this->getInput(['73021']));
             $commandTester->assertCommandIsSuccessful();
 
             $display = $commandTester->getDisplay();
-            self::assertStringContainsString('0 TYPO3 core patches updated', $display);
+            self::assertStringContainsString('0 TYPO3 core patches removed', $display);
         } catch (Throwable $throwable) {
             throw new RuntimeException($commandTester->getDisplay(), 0, $throwable);
         }

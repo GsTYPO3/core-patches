@@ -26,8 +26,15 @@ final class UtilsTest extends TestCase
      */
     public function testIsCI(): void
     {
+        $ciBackup = \getenv('GS_CI');
+
+        \putenv('GS_CI=');
+        self::assertSame(\getenv('CI') !== false, Utils::isCI());
+        \putenv('GS_CI=0');
         self::assertFalse(Utils::isCI());
         \putenv('GS_CI=1');
         self::assertTrue(Utils::isCI());
+
+        \putenv('GS_CI=' . $ciBackup);
     }
 }

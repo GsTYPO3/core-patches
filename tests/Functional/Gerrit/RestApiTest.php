@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace GsTYPO3\CorePatches\Tests\Unit\Gerrit;
+namespace GsTYPO3\CorePatches\Tests\Functional\Gerrit;
 
 use Composer\Config;
 use Composer\Downloader\TransportException;
@@ -23,23 +23,20 @@ use Exception;
 use GsTYPO3\CorePatches\Exception\InvalidResponseException;
 use GsTYPO3\CorePatches\Exception\UnexpectedResponseException;
 use GsTYPO3\CorePatches\Gerrit\RestApi;
-use GsTYPO3\CorePatches\Tests\Unit\TestCase;
+use GsTYPO3\CorePatches\Tests\Functional\TestCaseWithFixtures;
 use Iterator;
 use Prophecy\Argument;
-use Prophecy\PhpUnit\ProphecyTrait;
 use RuntimeException;
 
 /**
  * @medium
  * @covers \GsTYPO3\CorePatches\Gerrit\RestApi
- * @uses \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
- * @uses \GsTYPO3\CorePatches\Gerrit\Entity\ChangeInfo
- * @uses \GsTYPO3\CorePatches\Gerrit\Entity\IncludedInInfo
+ * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
+ * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\ChangeInfo
+ * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\IncludedInInfo
  */
-final class RestApiTest extends TestCase
+final class RestApiTest extends TestCaseWithFixtures
 {
-    use ProphecyTrait;
-
     private string $previousWorkingDir;
 
     private string $testWorkingDir;

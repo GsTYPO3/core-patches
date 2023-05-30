@@ -115,7 +115,7 @@
 			"@ci:tests:functional",
 			"@ci:tests:smoke"
 		],
-		"ci:tests:functional": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-functional.xml --testsuite \"Functional Test Suite\"'",
+		"ci:tests:functional": "@php phpunit -c tests/Functional/phpunit.xml",
 		"ci:tests:smoke": [
 			"@composer test:typo3:patch:apply",
 			"@composer test:typo3:patch:update",
@@ -236,7 +236,10 @@
 			"@tools:tests:functional",
 			"@tools:tests:smoke"
 		],
-		"tools:tests:functional": "echo 'phpunit -c phpunit.xml.dist --log-junit var/log/phpunit-functional.xml --testsuite \"Functional Test Suite\"'",
+		"tools:tests:functional": [
+			"(test -d var/tests && rm -fr var/tests) || true",
+			"@php phpunit -c tests/Functional/phpunit.xml"
+		],
 		"tools:tests:smoke": [
 			"@composer test:typo3:patch:apply",
 			"@composer test:typo3:patch:update",

@@ -4,14 +4,14 @@
   xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
   bootstrap="../bootstrap.php"
   colors="true"
-  forceCoversAnnotation="true"
+  forceCoversAnnotation="false"
   failOnRisky="true"
   beStrictAboutChangesToGlobalState="true"
   beStrictAboutOutputDuringTests="false"
   beStrictAboutResourceUsageDuringSmallTests="true"
   beStrictAboutTestsThatDoNotTestAnything="true"
   beStrictAboutTodoAnnotatedTests="true"
-  beStrictAboutCoversAnnotation="true"
+  beStrictAboutCoversAnnotation="false"
   enforceTimeLimit="false"
   defaultTimeLimit="0"
 >
@@ -20,19 +20,19 @@
       <directory>../../src/</directory>
     </include>
     <report>
-      <html outputDirectory="../../var/log/report-unit"/>
-      <php outputFile="../../var/log/cov/coverage-unit.cov"/>
+      <html outputDirectory="../../var/log/report-functional"/>
+      <php outputFile="../../var/log/cov/coverage-functional.cov"/>
     </report>
   </coverage>
   <testsuites>
-    <testsuite name="Unit Test Suite">
+    <testsuite name="Functional Test Suite">
       <directory>./</directory>
     </testsuite>
   </testsuites>
   <logging>
-    <junit outputFile="../../var/log/junit-unit.xml"/>
-    <testdoxHtml outputFile="../../var/log/testdox-unit.html"/>
-    <testdoxText outputFile="../../var/log/testdox-unit.txt"/>
-    <testdoxXml outputFile="../../var/log/testdox-unit.xml"/>
+    <junit outputFile="../../var/log/junit-functional.xml"/>
+    <testdoxHtml outputFile="../../var/log/testdox-functional.html"/>
+    <testdoxText outputFile="../../var/log/testdox-functional.txt"/>
+    <testdoxXml outputFile="../../var/log/testdox-functional.xml"/>
   </logging>
 </phpunit>

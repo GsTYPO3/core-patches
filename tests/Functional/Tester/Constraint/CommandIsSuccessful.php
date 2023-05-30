@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace GsTYPO3\CorePatches\Tests\Unit\Tester\Constraint;
+namespace GsTYPO3\CorePatches\Tests\Functional\Tester\Constraint;
 
 use PHPUnit\Framework\Constraint\Constraint;
 

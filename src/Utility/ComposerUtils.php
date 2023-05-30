@@ -23,6 +23,7 @@ use Composer\Package\BasePackage;
 use Composer\Package\PackageInterface;
 use Composer\Semver\Semver;
 use Composer\Semver\VersionParser;
+use Composer\Util\HttpDownloader;
 use GsTYPO3\CorePatches\Config;
 use GsTYPO3\CorePatches\Config\Patches;
 use GsTYPO3\CorePatches\Config\PreferredInstall;
@@ -36,7 +37,7 @@ use React\Promise\PromiseInterface;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\OutputInterface;
 
-final class ComposerUtils
+class ComposerUtils
 {
     private Composer $composer;
 
@@ -64,7 +65,11 @@ final class ComposerUtils
         $this->composer = $composer;
         $this->io = $io;
 
-        $httpDownloader = Factory::createHttpDownloader($this->io, $this->composer->getConfig());
+        /** @var HttpDownloader $httpDownloader */
+        $httpDownloader = \null;
+        if (!$config instanceof Config || !$restApi instanceof RestApi) {
+            $httpDownloader = Factory::createHttpDownloader($this->io, $this->composer->getConfig());
+        }
 
         $this->config = $config ?? new Config(
             new JsonFile(Factory::getComposerFile(), $httpDownloader, $this->io),
@@ -572,9 +577,10 @@ final class ComposerUtils
     /**
      * @return array<int, string>
      */
-    public function verifyPatchesForPackage(PackageInterface $package): array
+    public function truncateOutdatedPatchesForPackage(PackageInterface $package): array
     {
-        $obsoleteChanges = [];
+        $truncatedChanges = [];
+        $truncatedPatches = [];
         $appliedChanges = $this->config->load()->getChanges();
         $patches = $this->config->getPatches();
 
@@ -587,8 +593,8 @@ final class ComposerUtils
                 foreach ($includedInInfo->tags as $tag) {
                     if (Semver::satisfies($package->getVersion(), $tag)) {
                         if ($this->askRemoval($appliedChange->getNumber())) {
-                            $obsoleteChanges[] = (string)$appliedChange->getNumber();
-                            $this->patchUtils->prepareRemove([$appliedChange->getNumber()], $patches);
+                            $truncatedChanges[] = $appliedChange->getNumber();
+                            $truncatedPatches[] = (string)$appliedChange->getNumber();
                         }
 
                         continue 2;
@@ -598,8 +604,8 @@ final class ComposerUtils
                 foreach ($includedInInfo->branches as $branch) {
                     if (Semver::satisfies($package->getVersion(), 'dev-' . $branch)) {
                         if ($this->askRemoval($appliedChange->getNumber())) {
-                            $obsoleteChanges[] = (string)$appliedChange->getNumber();
-                            $this->patchUtils->prepareRemove([$appliedChange->getNumber()], $patches);
+                            $truncatedChanges[] = $appliedChange->getNumber();
+                            $truncatedPatches[] = (string)$appliedChange->getNumber();
                         }
 
                         continue 2;
@@ -608,7 +614,9 @@ final class ComposerUtils
             }
         }
 
-        return $obsoleteChanges;
+        $this->patchUtils->truncate($truncatedChanges, $patches);
+
+        return $truncatedPatches;
     }
 
     /**

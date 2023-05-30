@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches\Tests\Unit;
 
-use GsTYPO3\CorePatches\Tests\TestCase as BaseTestCase;
+use GsTYPO3\CorePatches\Tests\TestCaseWithFixtures as BaseTestCase;
 
-abstract class TestCase extends BaseTestCase
+abstract class TestCaseWithFixtures extends BaseTestCase
 {
 }

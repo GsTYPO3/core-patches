@@ -33,9 +33,9 @@ use GsTYPO3\CorePatches\Utility\Utils;
 
 final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
 {
-    private ComposerUtils $composerUtils;
+    private ?ComposerUtils $composerUtils;
 
-    private Config $config;
+    private ?Config $config;
 
     /**
      * @var array<int, string>
@@ -43,15 +43,37 @@ final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
     private array $patchesToRemove = [];
 
     /**
+     * @param array<int, string> $patchesToRemove
+     */
+    public function __construct(
+        ?ComposerUtils $composerUtils = null,
+        ?Config $config = null,
+        array $patchesToRemove = []
+    ) {
+        $this->composerUtils = $composerUtils;
+        $this->config = $config;
+        $this->patchesToRemove = $patchesToRemove;
+    }
+
+    /**
      * @inheritDoc
      */
     public function activate(Composer $composer, IOInterface $io): void
     {
-        $this->composerUtils = new ComposerUtils($composer, $io);
-        $this->config = new Config(
-            new JsonFile(Factory::getComposerFile(), Factory::createHttpDownloader($io, $composer->getConfig()), $io),
-            $composer->getConfig()->getConfigSource()
-        );
+        if (!$this->composerUtils instanceof ComposerUtils) {
+            $this->composerUtils = new ComposerUtils($composer, $io);
+        }
+
+        if (!$this->config instanceof Config) {
+            $this->config = new Config(
+                new JsonFile(
+                    Factory::getComposerFile(),
+                    Factory::createHttpDownloader($io, $composer->getConfig()),
+                    $io
+                ),
+                $composer->getConfig()->getConfigSource()
+            );
+        }
 
         $composer->getConfig()->getConfigSource()->addConfigSetting('allow-plugins.cweagans/composer-patches', true);
     }
@@ -94,17 +116,25 @@ final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            InstallerEvents::PRE_OPERATIONS_EXEC => ['checkForObsoletePatches', 50],
-            ScriptEvents::POST_INSTALL_CMD => ['removeOfObsoletePatches', 50],
-            ScriptEvents::POST_UPDATE_CMD => ['removeOfObsoletePatches', 50],
+            InstallerEvents::PRE_OPERATIONS_EXEC => ['checkForOutdatedPatches', 50],
+            ScriptEvents::POST_INSTALL_CMD => ['removeOutdatedPatches', 50],
+            ScriptEvents::POST_UPDATE_CMD => ['removeOutdatedPatches', 50],
         ];
     }
 
     /**
-     * Check for obsolete patches before they get applied.
+     * Check for outdated patches before they get applied.
      */
-    public function checkForObsoletePatches(InstallerEvent $installerEvent): void
+    public function checkForOutdatedPatches(InstallerEvent $installerEvent): void
     {
+        if (!$this->composerUtils instanceof ComposerUtils) {
+            return;
+        }
+
+        if (!$this->config instanceof Config) {
+            return;
+        }
+
         if (!$installerEvent->getTransaction() instanceof Transaction) {
             return;
         }
@@ -119,32 +149,36 @@ final class Plugin implements PluginInterface, Capable, EventSubscriberInterface
             return;
         }
 
-        $installerEvent->getIO()->write('<info>Checking for obsolete patches, this may take a while...</info>');
+        $installerEvent->getIO()->write('<info>Checking for outdated patches, this may take a while...</info>');
 
         foreach ($installerEvent->getTransaction()->getOperations() as $operation) {
             if ($operation instanceof InstallOperation) {
                 $this->patchesToRemove = [
                     ...$this->patchesToRemove,
-                    ...$this->composerUtils->verifyPatchesForPackage($operation->getPackage()),
+                    ...$this->composerUtils->truncateOutdatedPatchesForPackage($operation->getPackage()),
                 ];
             } elseif ($operation instanceof UpdateOperation) {
                 $this->patchesToRemove = [
                     ...$this->patchesToRemove,
-                    ...$this->composerUtils->verifyPatchesForPackage($operation->getTargetPackage()),
+                    ...$this->composerUtils->truncateOutdatedPatchesForPackage($operation->getTargetPackage()),
                 ];
             }
         }
     }
 
     /**
-     * Check for obsolete patches before they get applied.
+     * Remove outdated patches.
      */
-    public function removeOfObsoletePatches(Event $event): void
+    public function removeOutdatedPatches(Event $event): void
     {
+        if (!$this->composerUtils instanceof ComposerUtils) {
+            return;
+        }
+
         if ($this->patchesToRemove !== []) {
             $event->getIO()->write('<info>Removing patches marked for removal...</info>');
-            $this->composerUtils->removePatches($this->patchesToRemove, true);
-            $event->getIO()->write('<info>Patches successfully removed.</info>');
+            $patchesCount = $this->composerUtils->removePatches($this->patchesToRemove, true);
+            $event->getIO()->write(sprintf('<info>%d patches successfully removed.</info>', $patchesCount));
         }
     }
 }

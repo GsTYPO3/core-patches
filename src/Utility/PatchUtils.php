@@ -21,7 +21,7 @@ use GsTYPO3\CorePatches\Config\Patches;
 use GsTYPO3\CorePatches\Exception\InvalidPatchException;
 use GsTYPO3\CorePatches\Exception\NoPatchException;
 
-final class PatchUtils
+class PatchUtils
 {
     private Composer $composer;
 
@@ -106,7 +106,7 @@ final class PatchUtils
      * @param  Patches         $patches    the available patches
      * @return Patches         the removed patches
      */
-    public function prepareRemove(array $numericIds, Patches $patches): Patches
+    public function truncate(array $numericIds, Patches $patches): Patches
     {
         $patchesRemoved = new Patches();
 
