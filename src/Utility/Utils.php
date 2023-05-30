@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace GsTYPO3\CorePatches\Utility;
 
-final class Utils
+class Utils
 {
     /**
      * Detects if running in CI.

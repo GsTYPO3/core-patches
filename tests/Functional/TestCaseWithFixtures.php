@@ -11,10 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace GsTYPO3\CorePatches\Tests\Unit;
+namespace GsTYPO3\CorePatches\Tests\Functional;
 
-use GsTYPO3\CorePatches\Tests\TestCase as BaseTestCase;
+use GsTYPO3\CorePatches\Tests\TestCaseWithFixtures as BaseTestCase;
 
-abstract class TestCase extends BaseTestCase
+abstract class TestCaseWithFixtures extends BaseTestCase
 {
 }

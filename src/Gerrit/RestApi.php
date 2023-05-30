@@ -46,7 +46,7 @@ final class RestApi
      */
     private array $includedInInfo = [];
 
-    public function __construct(HttpDownloader $httpDownloader)
+    public function __construct(?HttpDownloader $httpDownloader)
     {
         $this->httpDownloader = $httpDownloader;
     }

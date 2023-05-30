@@ -11,10 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace GsTYPO3\CorePatches\Tests\Unit;
+namespace GsTYPO3\CorePatches\Tests;
 
-use GsTYPO3\CorePatches\Tests\TestCase as BaseTestCase;
+use PHPUnit\Framework\TestCase as BaseTestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 abstract class TestCase extends BaseTestCase
 {
+    use ProphecyTrait;
 }

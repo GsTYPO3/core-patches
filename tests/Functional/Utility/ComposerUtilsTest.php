@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace GsTYPO3\CorePatches\Tests\Unit\Utility;
+namespace GsTYPO3\CorePatches\Tests\Functional\Utility;
 
 use Composer\Composer;
 use Composer\Console\Application;
@@ -19,7 +19,7 @@ use Composer\Factory;
 use Composer\IO\BufferIO;
 use Composer\Package\PackageInterface;
 use GsTYPO3\CorePatches\Config;
-use GsTYPO3\CorePatches\Tests\Unit\TestCase;
+use GsTYPO3\CorePatches\Tests\Functional\TestCaseWithFixtures;
 use GsTYPO3\CorePatches\Utility\ComposerUtils;
 use RuntimeException;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -45,7 +45,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
  * @uses \GsTYPO3\CorePatches\Utility\PatchUtils
  * @uses \GsTYPO3\CorePatches\Utility\Utils
  */
-final class ComposerUtilsTest extends TestCase
+final class ComposerUtilsTest extends TestCaseWithFixtures
 {
     private Application $application;
 
@@ -151,7 +151,7 @@ final class ComposerUtilsTest extends TestCase
     /**
      * @long
      */
-    public function testVerifyPatchesForPackageCanHandleBranches(): void
+    public function testTruncateOutdatedPatchesForPackage(): void
     {
         self::assertSame(
             3,
@@ -164,7 +164,7 @@ final class ComposerUtilsTest extends TestCase
         self::assertInstanceOf(PackageInterface::class, $package);
         self::assertSame(
             [],
-            $this->composerUtils->verifyPatchesForPackage($package),
+            $this->composerUtils->truncateOutdatedPatchesForPackage($package),
             $this->bufferIO->getOutput()
         );
     }

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace GsTYPO3\CorePatches\Tests\Unit\Command;
+namespace GsTYPO3\CorePatches\Tests\Functional\Command;
 
 use GsTYPO3\CorePatches\Command\Typo3\Patch\ApplyCommand;
 use RuntimeException;
@@ -20,24 +20,24 @@ use Throwable;
 /**
  * @long
  * @covers \GsTYPO3\CorePatches\Command\Typo3\Patch\ApplyCommand
- * @uses \GsTYPO3\CorePatches\CommandProvider
- * @uses \GsTYPO3\CorePatches\Command\Typo3\Patch\RemoveCommand
- * @uses \GsTYPO3\CorePatches\Command\Typo3\Patch\UpdateCommand
- * @uses \GsTYPO3\CorePatches\Config
- * @uses \GsTYPO3\CorePatches\Config\Changes
- * @uses \GsTYPO3\CorePatches\Config\Changes\Change
- * @uses \GsTYPO3\CorePatches\Config\Packages
- * @uses \GsTYPO3\CorePatches\Config\Patches
- * @uses \GsTYPO3\CorePatches\Config\Patches\PackagePatches
- * @uses \GsTYPO3\CorePatches\Config\PreferredInstall
- * @uses \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
- * @uses \GsTYPO3\CorePatches\Gerrit\Entity\ChangeInfo
- * @uses \GsTYPO3\CorePatches\Gerrit\Entity\IncludedInInfo
- * @uses \GsTYPO3\CorePatches\Gerrit\RestApi
- * @uses \GsTYPO3\CorePatches\Plugin
- * @uses \GsTYPO3\CorePatches\Utility\ComposerUtils
- * @uses \GsTYPO3\CorePatches\Utility\PatchUtils
- * @uses \GsTYPO3\CorePatches\Utility\Utils
+ * @ uses \GsTYPO3\CorePatches\CommandProvider
+ * @ uses \GsTYPO3\CorePatches\Command\Typo3\Patch\RemoveCommand
+ * @ uses \GsTYPO3\CorePatches\Command\Typo3\Patch\UpdateCommand
+ * @ uses \GsTYPO3\CorePatches\Config
+ * @ uses \GsTYPO3\CorePatches\Config\Changes
+ * @ uses \GsTYPO3\CorePatches\Config\Changes\Change
+ * @ uses \GsTYPO3\CorePatches\Config\Packages
+ * @ uses \GsTYPO3\CorePatches\Config\Patches
+ * @ uses \GsTYPO3\CorePatches\Config\Patches\PackagePatches
+ * @ uses \GsTYPO3\CorePatches\Config\PreferredInstall
+ * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\AbstractEntity
+ * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\ChangeInfo
+ * @ uses \GsTYPO3\CorePatches\Gerrit\Entity\IncludedInInfo
+ * @ uses \GsTYPO3\CorePatches\Gerrit\RestApi
+ * @ uses \GsTYPO3\CorePatches\Plugin
+ * @ uses \GsTYPO3\CorePatches\Utility\ComposerUtils
+ * @ uses \GsTYPO3\CorePatches\Utility\PatchUtils
+ * @ uses \GsTYPO3\CorePatches\Utility\Utils
  */
 final class ApplyCommandTest extends CommandTestCase
 {

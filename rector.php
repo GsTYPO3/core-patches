@@ -12,6 +12,8 @@ declare(strict_types=1);
  */
 
 use Rector\Config\RectorConfig;
+use Rector\DeadCode\Rector\MethodCall\RemoveEmptyMethodCallRector;
+use Rector\PHPUnit\Rector\Class_\AddProphecyTraitRector;
 use Rector\PHPUnit\Set\PHPUnitLevelSetList;
 use Rector\PHPUnit\Set\PHPUnitSetList;
 use Rector\Privatization\Rector\Class_\FinalizeClassesWithoutChildrenRector;
@@ -58,8 +60,13 @@ return static function (RectorConfig $rectorConfig): void {
     ]);
 
     $rectorConfig->skip([
+        AddProphecyTraitRector::class,
         FinalizeClassesWithoutChildrenRector::class => [
             __DIR__ . '/src/Exception/RuntimeException.php',
+            __DIR__ . '/src/Utility/*',
+        ],
+        RemoveEmptyMethodCallRector::class => [
+            __DIR__ . '/tests/*',
         ],
     ]);
 };

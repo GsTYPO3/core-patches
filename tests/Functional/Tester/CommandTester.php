@@ -9,11 +9,11 @@
  * file that was distributed with this source code.
  */
 
-namespace GsTYPO3\CorePatches\Tests\Unit\Tester;
+namespace GsTYPO3\CorePatches\Tests\Functional\Tester;
 
 use Composer\Command\BaseCommand;
 use Composer\IO\BufferIO;
-use GsTYPO3\CorePatches\Tests\Unit\Tester\Constraint\CommandIsSuccessful;
+use GsTYPO3\CorePatches\Tests\Functional\Tester\Constraint\CommandIsSuccessful;
 use PHPUnit\Framework\Assert;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
